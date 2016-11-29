@@ -9,22 +9,21 @@ using namespace std;
 
 void print_signal(const vector<double>& x)
 {
-	for (int i=0;i<x.size();i++)
+	for (size_t i=0;i<x.size();i++)
 		cout << "x[" << i << "]= " << x[i] << endl;
 	cout << endl;
 }
 
-void save_signal(const vector<double>& x,char* filename) {
-  int i;
-  FILE *fp=fopen(filename,"wt");
-  for (i=0;i<x.size();i++) {
-   fprintf(fp,"%f\n",x[i]);
-  }
-  fclose(fp);
+void save_signal(const vector<double>& x, const string& filename) {
+	FILE *fp=fopen(filename.c_str(),"wt");
+	for (size_t i=0;i<x.size();i++) {
+	fprintf(fp,"%f\n",x[i]);
+	}
+	fclose(fp);
 }
 
-void read_signal(vector<double>& x, int size, char* filename) {
-	FILE *fp=fopen(filename,"rt");
+void read_signal(vector<double>& x, int size, const string& filename) {
+	FILE *fp=fopen(filename.c_str(),"rt");
 	x = vector<double>(size);
 	for (int i=0;i<size;i++) {
 		float t;
@@ -186,26 +185,26 @@ void synthese_97(vector<double>& x)
 /* TP2 */
 int mirror_increment(int index, int increment, int size) 
 {
-	return (index < 0 || index >= size) ? (-increment) : increment;
+	return ((index + increment) < 0 || (index + increment) >= size) ? (-increment) : increment;
 }
 
-void analyse_97_lifting_prediction(vector<double>& x, float a)
+void analyse_97_lifting_prediction(vector<double>& x, double a)
 {
 	size_t p = x.size();
 	size_t limit = p * 0.5;
 	for(size_t i = 0; i < limit; ++i)
 	{
-		x[2 * i + 1] =  a * x[2 * i] + x[2 * i + mirror_increment(i, 1, p)] + a * x[2 * i + mirror_increment(i, 2, p)];
+		x[2 * i + 1] =  a * x[2 * i] + x[2 * i + mirror_increment(2 * i, 1, p)] + a * x[2 * i + mirror_increment(2 * i, 2, p)];
 	}
 }
 
-void analyse_97_lifting_update(vector<double>& x, float a)
+void analyse_97_lifting_update(vector<double>& x, double a)
 {
 	size_t p = x.size();
 	size_t limit = p * 0.5;
 	for(size_t i = 0; i < limit; ++i)
 	{
-		x[2 * i] = a * x[2 * i + mirror_increment(i, -1, p)]+x[2 * i] + a * x[2 * i + mirror_increment(i, 1, p)];
+		x[2 * i] = a * x[2 * i + mirror_increment(2 * i, -1, p) ]+ x[2 * i] + a * x[2 * i + mirror_increment(2 * i, 1, p)];
 	}
 }
 
@@ -284,11 +283,11 @@ void synthese_97_lifting(vector<double>& x)
 }
 
 /* Error */
-float error(const vector<double>& x , const vector<double>& y)
+double error(const vector<double>& x , const vector<double>& y)
 {
 	size_t p = x.size();
 
-	float error = 0;
+	double error = 0;
 	for(size_t i = 0; i < p; ++i)
 	{
 		error += (x[i] - y[i]) * (x[i] - y[i]); 
@@ -296,17 +295,58 @@ float error(const vector<double>& x , const vector<double>& y)
 
 	return error;
 }
+
+/* AMR */
+void amr(std::vector<double>& x, int level)
+{
+	if(level > 0)
+	{
+		analyse_97_lifting(x);
+		
+		vector<double> xa;
+		xa.insert(xa.begin(), x.begin(), x.begin() + (0.5 * x.size()));  
+		vector<double> xd;
+		xd.insert(xd.begin(), x.begin() + (0.5 * x.size()), x.end());
+
+		amr(xa, level-1);
+		xa.insert( xa.end(), xd.begin(), xd.end() );
+		x = xa;
+	}
+}
+
+void iamr(std::vector<double>& x, int level)
+{
+	if(level > 0)
+	{
+
+		vector<double> xa;
+		xa.insert(xa.begin(), x.begin(), x.begin() + (0.5 * x.size()));  
+		vector<double> xd;
+		xd.insert(xd.begin(), x.begin() + (0.5 * x.size()), x.end());
+		
+		iamr(xa, level-1);
+
+		synthese_97_lifting(xa);
+		xa.insert( xa.end(), xd.begin(), xd.end() );
+		x = xa;
+	}
+}
+
+
+
 /* Main */
 int main (int argc, char* argv[])
 {
 /* Rampe */
-	vector<double> rampe;
+	cout << "Rampe" << std::endl;
+	vector<double> rampeOriginal;
 	for(int i = 0; i < 255; i++)
-		rampe.push_back(i);
-	save_signal(rampe,"rampe.txt");
+		rampeOriginal.push_back(i);
+	save_signal(rampeOriginal,"rampe.txt");
 
 	/* Haar */
 		/* Analyse de Haar */
+	vector<double> rampe = rampeOriginal;
 	cout <<"\n Analyse de Haar" << endl;
 	analyse_haar(rampe);
 	save_signal(rampe,"./ouput_data/rampe_analyse_haar.txt");
@@ -320,6 +360,7 @@ int main (int argc, char* argv[])
 	*/
 
 	/* biorthogonaux 9/7 */
+	rampe = rampeOriginal;
 		/* Analyse biorthogonaux 9/7 */
 	cout <<"\n Analyse de biorthogonaux 9/7" << endl;
 	analyse_97(rampe);
@@ -336,6 +377,7 @@ int main (int argc, char* argv[])
 	*/
 
 /* Leleccum */
+	cout << "Leleccum" << std::endl;
 	vector<double> leleccumOriginal;
 	read_signal(leleccumOriginal, 4096, "./leleccum.txt");
 
@@ -351,8 +393,10 @@ int main (int argc, char* argv[])
 	cout <<"\n Reconstitution de Haar" << endl;
 	synthese_haar(leleccum);
 	save_signal(leleccum,"./ouput_data/leleccum_synthese_haar.txt");
+	cout << "Error: " << error(leleccum, leleccumOriginal) <<endl;
 
 	/* biorthogonaux 9/7 */
+	leleccum = leleccumOriginal;
 		/* Analyse biorthogonaux 9/7 */
 	cout <<"\n Analyse de biorthogonaux 9/7" << endl;
 	analyse_97(leleccum);
@@ -362,8 +406,9 @@ int main (int argc, char* argv[])
 	cout <<"\n Synthese de biorthogonaux 9/7" << endl;
 	synthese_97(leleccum);
 	save_signal(leleccum,"./ouput_data/leleccum_synthese_97.txt");
+	cout << "Error: " << error(leleccum, leleccumOriginal) <<endl;
 
-/* Leleccum */
+	/* Leleccum */
 	leleccum = leleccumOriginal;
 
 	cout <<"\n Lifting de biorthogonaux 9/7" << endl;
@@ -372,6 +417,64 @@ int main (int argc, char* argv[])
 
 	synthese_97_lifting(leleccum);
 	save_signal(leleccum,"./ouput_data/leleccum_synthese_97_lifting.txt");
+	cout << "Error: " << error(leleccum, leleccumOriginal) <<endl;
+
+/* Test */
+	cout << "Test" << std::endl;
+	vector<double> testOriginal;
+	read_signal(testOriginal, 512, "./test.txt");
+
+	vector<double> test = testOriginal;
+
+	/* Haar */
+		/* Analyse de Haar */
+	cout <<"\n Analyse de Haar" << endl;
+	analyse_haar(test);
+	save_signal(test,"./ouput_data/test_analyse_haar.txt");
+
+		/* Reconstitution de Haar */
+	cout <<"\n Reconstitution de Haar" << endl;
+	synthese_haar(test);
+	save_signal(test,"./ouput_data/test_synthese_haar.txt");
+	cout << "Error: " << error(test, testOriginal) <<endl;
+
+	/* biorthogonaux 9/7 */
+		/* Analyse biorthogonaux 9/7 */
+	test = testOriginal;
+	cout <<"\n Analyse de biorthogonaux 9/7" << endl;
+	analyse_97(test);
+	save_signal(test,"./ouput_data/test_analyse_97.txt");
+
+		/* Reconstition biorthogonaux 9/7 */
+	cout <<"\n Synthese de biorthogonaux 9/7" << endl;
+	synthese_97(test);
+	save_signal(test,"./ouput_data/test_synthese_97.txt");
+	cout << "Error: " << error(test, testOriginal) <<endl;
+
+	/* Leleccum */
+	test = testOriginal;
+
+	cout <<"\n Lifting de biorthogonaux 9/7" << endl;
+	analyse_97_lifting(test);
+	save_signal(test,"./ouput_data/test_analyse_97_lifting.txt");
+
+	synthese_97_lifting(test);
+	save_signal(test,"./ouput_data/test_synthese_97_lifting.txt");
+	cout << "Error: " << error(test, testOriginal) <<endl;
+
+
+/* AMR */
+	test = testOriginal;
+	int level = 2;//log2(test.size());
+
+	cout <<"\n AMR synthese de lifting 9/7" << endl;
+	amr(test, level);
+	save_signal(test,"./ouput_data/test_amr_lifting.txt");
+
+	iamr(test, level);
+	save_signal(test,"./ouput_data/test_iamr_lifting.txt");
+	cout << "Error: " << error(test, testOriginal) <<endl;
+
 
 	return 1;
 }
