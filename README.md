@@ -2,4 +2,4 @@
 Image processing project
 
 Compilation line :
-g++ -WAll -std=c++11 main.cpp -o main
+g++ -Wall -std=c++11 main.cpp -o main
