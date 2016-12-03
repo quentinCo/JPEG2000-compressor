@@ -3,28 +3,31 @@
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <algorithm>
+#include <cstring>
+
+#include "./functions.c"
 
 using namespace std;
 
 
 void print_signal(const vector<double>& x)
 {
-	for (int i=0;i<x.size();i++)
+	for (size_t i=0;i<x.size();i++)
 		cout << "x[" << i << "]= " << x[i] << endl;
 	cout << endl;
 }
 
-void save_signal(const vector<double>& x,char* filename) {
-  int i;
-  FILE *fp=fopen(filename,"wt");
-  for (i=0;i<x.size();i++) {
-   fprintf(fp,"%f\n",x[i]);
-  }
-  fclose(fp);
+void save_signal(const vector<double>& x, const string& filename) {
+	FILE *fp=fopen(filename.c_str(),"wt");
+	for (size_t i=0;i<x.size();i++) {
+	fprintf(fp,"%f\n",x[i]);
+	}
+	fclose(fp);
 }
 
-void read_signal(vector<double>& x, int size, char* filename) {
-	FILE *fp=fopen(filename,"rt");
+void read_signal(vector<double>& x, int size, const string& filename) {
+	FILE *fp=fopen(filename.c_str(),"rt");
 	x = vector<double>(size);
 	for (int i=0;i<size;i++) {
 		float t;
@@ -33,6 +36,7 @@ void read_signal(vector<double>& x, int size, char* filename) {
 	}
 	fclose(fp);
 }
+
 /* TP1 */
 /* 1 - Interpolation d'un facteur 2 */
 void interpolation_2(vector<double>& x)
@@ -186,26 +190,34 @@ void synthese_97(vector<double>& x)
 /* TP2 */
 int mirror_increment(int index, int increment, int size) 
 {
-	return (index < 0 || index >= size) ? (-increment) : increment;
+	/*
+	if((index + increment) < 0)
+		return -(index + increment);
+	else if((index + increment) >= size)
+		return (size - index) + (size - (index + increment + 1));
+	else
+		return increment;
+	*/
+	return ((index + increment) < 0 || (index + increment) >= size) ? (-increment) : increment;
 }
 
-void analyse_97_lifting_prediction(vector<double>& x, float a)
+void analyse_97_lifting_prediction(vector<double>& x, double a)
 {
 	size_t p = x.size();
 	size_t limit = p * 0.5;
 	for(size_t i = 0; i < limit; ++i)
 	{
-		x[2 * i + 1] =  a * x[2 * i] + x[2 * i + mirror_increment(i, 1, p)] + a * x[2 * i + mirror_increment(i, 2, p)];
+		x[2 * i + 1] =  a * x[2 * i] + x[2 * i + mirror_increment(2 * i, 1, p)] + a * x[2 * i + mirror_increment(2 * i, 2, p)];
 	}
 }
 
-void analyse_97_lifting_update(vector<double>& x, float a)
+void analyse_97_lifting_update(vector<double>& x, double a)
 {
 	size_t p = x.size();
 	size_t limit = p * 0.5;
 	for(size_t i = 0; i < limit; ++i)
 	{
-		x[2 * i] = a * x[2 * i + mirror_increment(i, -1, p)]+x[2 * i] + a * x[2 * i + mirror_increment(i, 1, p)];
+		x[2 * i] = a * x[2 * i + mirror_increment(2 * i, -1, p) ]+ x[2 * i] + a * x[2 * i + mirror_increment(2 * i, 1, p)];
 	}
 }
 
@@ -284,11 +296,11 @@ void synthese_97_lifting(vector<double>& x)
 }
 
 /* Error */
-float error(const vector<double>& x , const vector<double>& y)
+double error(const vector<double>& x , const vector<double>& y)
 {
 	size_t p = x.size();
 
-	float error = 0;
+	double error = 0;
 	for(size_t i = 0; i < p; ++i)
 	{
 		error += (x[i] - y[i]) * (x[i] - y[i]); 
@@ -296,17 +308,253 @@ float error(const vector<double>& x , const vector<double>& y)
 
 	return error;
 }
+
+/* TP 3 */
+	/* AMR */
+void amr(std::vector<double>& x, int level)
+{
+	if(level > 0)
+	{
+		analyse_97_lifting(x);
+		
+		// Split
+		vector<double> xa;
+		xa.insert(xa.begin(), x.begin(), x.begin() + (0.5 * x.size()));  
+		vector<double> xd;
+		xd.insert(xd.begin(), x.begin() + (0.5 * x.size()), x.end());
+
+		amr(xa, level-1);
+		
+		// Merge		
+		xa.insert( xa.end(), xd.begin(), xd.end() );
+		x = xa;
+	}
+}
+
+void iamr(std::vector<double>& x, int level)
+{
+	if(level > 0)
+	{
+		// Split
+		vector<double> xa;
+		xa.insert(xa.begin(), x.begin(), x.begin() + (0.5 * x.size()));  
+		vector<double> xd;
+		xd.insert(xd.begin(), x.begin() + (0.5 * x.size()), x.end());
+		
+		iamr(xa, level-1);
+
+		// Merge
+		xa.insert( xa.end(), xd.begin(), xd.end() );
+		synthese_97_lifting(xa);
+		x = xa;
+	}
+}
+
+void coutValues(std::vector<double>& x)
+{
+	std::cout << "Size: " << x.size() << std::endl;
+	std::cout << "Min: " << *std::min_element(x.begin(), x.end()) << std::endl;
+	std::cout << "Max: " << *std::max_element(x.begin(), x.end()) << std::endl;
+	std::cout << "Average: " << std::accumulate(x.begin(), x.end(), 0) / x.size()<< std::endl;
+}
+
+void subband(std::vector<double>& x, int level)
+{
+	if(level > 0)
+	{
+		vector<double> xa;
+		xa.insert(xa.begin(), x.begin(), x.begin() + (0.5 * x.size()));  
+		vector<double> xd;
+		xd.insert(xd.begin(), x.begin() + (0.5 * x.size()), x.end());
+		std::cout << "xd" << std::endl;
+		coutValues(xd);
+		subband(xa, level-1);
+	}
+	else
+	{
+		std::cout << "xa" << std::endl;
+		coutValues(x);
+	}
+}
+
+	/* 2D */
+std::vector<double> getLine(const std::vector<double>& image, size_t width, size_t index)
+{
+	std::vector<double> line;
+	/*for(size_t i = 0; i < width; ++i)
+		line.push_back(image[index * width + i]);*/
+	line.insert(line.begin(), image.begin() + index * width, image.begin() + (index + 1) * width /*- 1*/);
+	return line;
+}
+
+void setLine(std::vector<double>& image, const std::vector<double>& line, size_t width, size_t index)
+{
+	for(size_t i = 0; i < width; ++i)
+		image[index * width + i] = line[i];
+}
+
+std::vector<double> getColonne(const std::vector<double>& image, size_t width, size_t height, size_t index)
+{
+	std::vector<double> colonne;
+	for(size_t i = 0; i < height; ++i)
+		colonne.push_back(image[i*width + index]);
+
+	return colonne;
+}
+
+void setColonne(std::vector<double>& image, const std::vector<double>& colonne, size_t width, size_t height, size_t index)
+{
+	for(size_t i = 0; i < height; ++i)
+		image[i* width + index] = colonne[i];
+}
+
+void analyse2D_97(vector<double>& image, size_t width, size_t height)
+{
+	std::cout << "\tLine Processing" << std::endl;
+	for(size_t i = 0; i < height; i++)
+	{
+		std::vector<double> line = getLine(image, width, i);
+		analyse_97_lifting(line);
+		setLine(image, line, width, i);
+	}
+
+	std::cout << "\tColonne Processing" << std::endl;
+	for(size_t i = 0; i < width; i++)
+	{
+		std::vector<double> colonne = getColonne(image, width, height, i);
+		analyse_97_lifting(colonne);
+		setColonne(image, colonne, width, height, i);
+	}
+}
+
+void synthese2D_97(vector<double>& image, size_t width, size_t height)
+{
+	for(size_t i = 0; i < width; i++)
+	{
+		std::vector<double> colonne = getColonne(image, width, height, i);
+		synthese_97_lifting(colonne);
+		setColonne(image, colonne, width, height, i);
+	}
+
+	for(size_t i = 0; i < height; i++)
+	{
+		std::vector<double> line = getLine(image, width, i);
+		synthese_97_lifting(line);
+		setLine(image, line, width, i);
+	}
+}
+
+void amr2D_97(vector<double>& image, size_t width, size_t height, int level)
+{
+	if(level > 0)
+	{
+		analyse2D_97(image, width, height);
+		
+		// Split
+		vector<double> imageA;
+		size_t widthA = 0.5 * width;
+		size_t heightA = 0.5 * height;
+		for(size_t i = 0; i < heightA; ++i)
+		{
+			for(size_t j = 0; j < widthA; ++j)
+				imageA.push_back(image[i * width + j]);
+		}
+		amr2D_97(imageA, widthA, heightA, level-1);
+		
+		// Merge		
+		for(size_t i = 0; i < heightA; ++i)
+		{
+			for(size_t j = 0; j < widthA; ++j)
+				image[i * width + j] = imageA[i * widthA + j];
+		}
+	}
+}
+
+void iamr2D_97(vector<double>& image, size_t width, size_t height, int level)
+{
+	if(level > 0)
+	{
+		vector<double> imageA;
+		size_t widthA = 0.5 * width;
+		size_t heightA = 0.5 * height;
+		for(size_t i = 0; i < heightA; ++i)
+		{
+			for(size_t j = 0; j < widthA; ++j)
+				imageA.push_back(image[i * width + j]);
+		}
+
+		iamr2D_97(imageA, widthA, heightA, level-1);
+
+				// Merge		
+		for(size_t i = 0; i < heightA; ++i)
+		{
+			for(size_t j = 0; j < widthA; ++j)
+				image[i * width + j] = imageA[i * widthA + j];
+		}
+
+		synthese2D_97(image, width, height);
+	}
+}
+
+void image_processing()
+{
+	string filePath = "./lena.bmp";
+	uint32_t dim = 512;
+
+	vector<double> imageOriginal;
+
+	double* data = charge_bmp256(filePath.c_str(), &dim, &dim);
+	for(size_t i = 0; i < dim * dim; ++i)
+		imageOriginal.push_back(data[i]);
+
+	vector<double> image = imageOriginal;
+	analyse2D_97(image, dim, dim);
+
+	for(size_t i = 0; i < dim*dim ; ++i)
+		data[i] = image[i];
+
+	string exitPath = "./analyse_lifting_lena.bmp";
+	ecrit_bmp256(exitPath.c_str(), dim, dim, data);
+
+	synthese2D_97(image, dim, dim);
+
+	for(size_t i = 0; i < dim*dim ; ++i)
+		data[i] = image[i];
+
+	exitPath = "./synthese_lifting_lena.bmp";
+	ecrit_bmp256(exitPath.c_str(), dim, dim, data);	
+
+
+	/* AMR */
+	image = imageOriginal;
+	amr2D_97(image, dim, dim, 3);
+	for(size_t i = 0; i < dim*dim ; ++i)
+		data[i] = image[i];
+
+	exitPath = "./amr2D_97_lena.bmp";
+	ecrit_bmp256(exitPath.c_str(), dim, dim, data);
+
+	iamr2D_97(image, dim, dim, 3);
+	for(size_t i = 0; i < dim*dim ; ++i)
+		data[i] = image[i];
+
+	exitPath = "./iamr2D_97_lena.bmp";
+	ecrit_bmp256(exitPath.c_str(), dim, dim, data);	
+}
+
 /* Main */
 int main (int argc, char* argv[])
 {
 /* Rampe */
-	vector<double> rampe;
+	cout << "Rampe" << std::endl;
+	vector<double> rampeOriginal;
 	for(int i = 0; i < 255; i++)
-		rampe.push_back(i);
-	save_signal(rampe,"rampe.txt");
+		rampeOriginal.push_back(i);
+	save_signal(rampeOriginal,"rampe.txt");
 
 	/* Haar */
 		/* Analyse de Haar */
+	vector<double> rampe = rampeOriginal;
 	cout <<"\n Analyse de Haar" << endl;
 	analyse_haar(rampe);
 	save_signal(rampe,"./ouput_data/rampe_analyse_haar.txt");
@@ -320,6 +568,7 @@ int main (int argc, char* argv[])
 	*/
 
 	/* biorthogonaux 9/7 */
+	rampe = rampeOriginal;
 		/* Analyse biorthogonaux 9/7 */
 	cout <<"\n Analyse de biorthogonaux 9/7" << endl;
 	analyse_97(rampe);
@@ -336,6 +585,7 @@ int main (int argc, char* argv[])
 	*/
 
 /* Leleccum */
+	cout << "Leleccum" << std::endl;
 	vector<double> leleccumOriginal;
 	read_signal(leleccumOriginal, 4096, "./leleccum.txt");
 
@@ -351,8 +601,10 @@ int main (int argc, char* argv[])
 	cout <<"\n Reconstitution de Haar" << endl;
 	synthese_haar(leleccum);
 	save_signal(leleccum,"./ouput_data/leleccum_synthese_haar.txt");
+	cout << "Error: " << error(leleccum, leleccumOriginal) <<endl;
 
 	/* biorthogonaux 9/7 */
+	leleccum = leleccumOriginal;
 		/* Analyse biorthogonaux 9/7 */
 	cout <<"\n Analyse de biorthogonaux 9/7" << endl;
 	analyse_97(leleccum);
@@ -362,8 +614,9 @@ int main (int argc, char* argv[])
 	cout <<"\n Synthese de biorthogonaux 9/7" << endl;
 	synthese_97(leleccum);
 	save_signal(leleccum,"./ouput_data/leleccum_synthese_97.txt");
+	cout << "Error: " << error(leleccum, leleccumOriginal) <<endl;
 
-/* Leleccum */
+	/* Leleccum */
 	leleccum = leleccumOriginal;
 
 	cout <<"\n Lifting de biorthogonaux 9/7" << endl;
@@ -372,6 +625,70 @@ int main (int argc, char* argv[])
 
 	synthese_97_lifting(leleccum);
 	save_signal(leleccum,"./ouput_data/leleccum_synthese_97_lifting.txt");
+	cout << "Error: " << error(leleccum, leleccumOriginal) <<endl;
+
+/* Test */
+	cout << "Test" << std::endl;
+	vector<double> testOriginal;
+	read_signal(testOriginal, 512, "./test.txt");
+
+	vector<double> test = testOriginal;
+
+	/* Haar */
+		/* Analyse de Haar */
+	cout <<"\n Analyse de Haar" << endl;
+	analyse_haar(test);
+	save_signal(test,"./ouput_data/test_analyse_haar.txt");
+
+		/* Reconstitution de Haar */
+	cout <<"\n Reconstitution de Haar" << endl;
+	synthese_haar(test);
+	save_signal(test,"./ouput_data/test_synthese_haar.txt");
+	cout << "Error: " << error(test, testOriginal) <<endl;
+
+	/* biorthogonaux 9/7 */
+		/* Analyse biorthogonaux 9/7 */
+	test = testOriginal;
+	cout <<"\n Analyse de biorthogonaux 9/7" << endl;
+	analyse_97(test);
+	save_signal(test,"./ouput_data/test_analyse_97.txt");
+
+		/* Reconstition biorthogonaux 9/7 */
+	cout <<"\n Synthese de biorthogonaux 9/7" << endl;
+	synthese_97(test);
+	save_signal(test,"./ouput_data/test_synthese_97.txt");
+	cout << "Error: " << error(test, testOriginal) <<endl;
+
+	/* Leleccum */
+	test = testOriginal;
+
+	cout <<"\n Lifting de biorthogonaux 9/7" << endl;
+	analyse_97_lifting(test);
+	save_signal(test,"./ouput_data/test_analyse_97_lifting.txt");
+
+	synthese_97_lifting(test);
+	save_signal(test,"./ouput_data/test_synthese_97_lifting.txt");
+	cout << "Error: " << error(test, testOriginal) <<endl;
+
+
+/* AMR */
+	test = testOriginal;
+	int level = 2;//log2(test.size());
+
+	cout <<"\n AMR synthese de lifting 9/7" << endl;
+	amr(test, level);
+	save_signal(test,"./ouput_data/test_amr_lifting.txt");
+
+	subband(test, level);
+
+	iamr(test, level);
+	save_signal(test,"./ouput_data/test_iamr_lifting.txt");
+	cout << "Error: " << error(test, testOriginal) <<endl;
+
+
+/* 2D */
+	std::cout << "\nImage Processing" << std::endl;
+	image_processing();
 
 	return 1;
 }
