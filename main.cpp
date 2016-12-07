@@ -350,12 +350,34 @@ void iamr(std::vector<double>& x, int level)
 	}
 }
 
-void coutValues(std::vector<double>& x)
+double computeAverage(const std::vector<double>& x)
+{
+	return std::accumulate(x.begin(), x.end(), 0) / static_cast<double>(x.size());
+}
+
+double computeVariance(const std::vector<double> x)
+{
+	double average = computeAverage(x);
+	double sum = std::accumulate(x.begin(), x.end(), 0,
+		[average](double sum, double b) {
+		return sum + (b - average) * (b - average);
+	});
+	return sum / static_cast<double>(x.size());
+}
+
+void coutValues(const std::vector<double>& x)
 {
 	std::cout << "Size: " << x.size() << std::endl;
 	std::cout << "Min: " << *std::min_element(x.begin(), x.end()) << std::endl;
 	std::cout << "Max: " << *std::max_element(x.begin(), x.end()) << std::endl;
-	std::cout << "Average: " << std::accumulate(x.begin(), x.end(), 0) / x.size()<< std::endl;
+	double average = computeAverage(x);
+	std::cout << "Average: " << average << std::endl;
+	double variance = computeVariance(x);
+	/*double varianceSum = 0;
+	for(auto it : x)
+		varianceSum += (it - average)*(it - average);
+	*/
+	std::cout << "Variance: " << variance << std::endl;
 }
 
 void subband(std::vector<double>& x, int level)
@@ -496,6 +518,67 @@ void iamr2D_97(vector<double>& image, size_t width, size_t height, int level)
 	}
 }
 
+vector<double> subPicture(const vector<double>& image, size_t width, size_t subWidth, size_t subHeight, size_t indexWidth, size_t indexHeight)
+{
+	//std::cout << "size: " << image.size() << " -- width: " << width << " -- subWidth: " << subWidth << " -- subHeight: " << subHeight << " -- indexWidth: " << indexWidth << " -- indexHeight: " << indexHeight << std::endl;
+	vector<double> subImage;
+	for(size_t i = indexHeight; i < (indexHeight + subHeight); ++i)
+		for(size_t j = indexWidth; j < (indexWidth + subWidth); ++j)
+			subImage.push_back(image[i * width + j]);
+
+	//std::cout << "subImage.size(): " << subImage.size() << std::endl;
+
+	return subImage;
+}
+
+vector<double> subband2D(const vector<double>& image, size_t width, size_t height, int level)
+{
+	std::vector<double> variances;
+	if(level > 0)
+	{
+		size_t halfWidth = width / 2;
+		size_t halfHeight = height / 2;
+
+		vector<double> imageA = subPicture(image, width, halfWidth, halfHeight, 0, 0);
+		variances = subband2D(imageA, halfWidth, halfHeight, level-1);
+
+		std::cout << "\nLevel: " << level << std::endl;
+		vector<double> imageDH = subPicture(image, width, halfWidth, halfHeight, 0, halfHeight);
+		std::cout << "\tImage DH: " << std::endl;
+		coutValues(imageDH);
+		variances.push_back(computeVariance(imageDH));
+
+		vector<double> imageDV = subPicture(image, width, halfWidth, halfHeight, halfWidth, 0);
+		std::cout << "\tImage DV: " << std::endl;
+		coutValues(imageDV);
+		variances.push_back(computeVariance(imageDV));
+
+		vector<double> imageDD = subPicture(image, width, halfWidth, halfHeight, halfWidth, halfHeight);
+		std::cout << "\tImage DD: " << std::endl;
+		coutValues(imageDD);
+		variances.push_back(computeVariance(imageDD));
+	}
+	else
+	{
+		std::cout << "\nLevel: " << level << std::endl;
+		std::cout << "\tImage A: " << std::endl;
+		coutValues(image);
+
+		variances.push_back(computeVariance(image));
+	}
+	return variances;
+}
+
+void debitBand(const std::vector<double>& variances, float debit, int level)
+{
+	double product = 0;
+	for(size_t i = 0; i < variances.size(); ++i)
+	{
+		/*int index = (i == 0)? 0 : i - 1;
+		int*/ 
+	}
+}
+
 void image_processing()
 {
 	string filePath = "./lena.bmp";
@@ -533,6 +616,12 @@ void image_processing()
 
 	exitPath = "./amr2D_97_lena.bmp";
 	ecrit_bmp256(exitPath.c_str(), dim, dim, data);
+
+	std::cout << "Subband 2D" << std::endl;
+	vector<double> variances = subband2D(image, dim, dim, 3);
+
+	/* DEBIT */
+
 
 	iamr2D_97(image, dim, dim, 3);
 	for(size_t i = 0; i < dim*dim ; ++i)
