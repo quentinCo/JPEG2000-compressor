@@ -190,14 +190,6 @@ void synthese_97(vector<double>& x)
 /* TP2 */
 int mirror_increment(int index, int increment, int size) 
 {
-	/*
-	if((index + increment) < 0)
-		return -(index + increment);
-	else if((index + increment) >= size)
-		return (size - index) + (size - (index + increment + 1));
-	else
-		return increment;
-	*/
 	return ((index + increment) < 0 || (index + increment) >= size) ? (-increment) : increment;
 }
 
@@ -352,7 +344,8 @@ void iamr(std::vector<double>& x, int level)
 
 double computeAverage(const std::vector<double>& x)
 {
-	return std::accumulate(x.begin(), x.end(), 0) / static_cast<double>(x.size());
+	double sum = std::accumulate(x.begin(), x.end(), 0);
+	return ( sum / static_cast<double>(x.size()));
 }
 
 double computeVariance(const std::vector<double> x)
@@ -362,7 +355,7 @@ double computeVariance(const std::vector<double> x)
 		[average](double sum, double b) {
 		return sum + (b - average) * (b - average);
 	});
-	return sum / static_cast<double>(x.size());
+	return (sum / static_cast<double>(x.size()));
 }
 
 void coutValues(const std::vector<double>& x)
@@ -373,10 +366,6 @@ void coutValues(const std::vector<double>& x)
 	double average = computeAverage(x);
 	std::cout << "Average: " << average << std::endl;
 	double variance = computeVariance(x);
-	/*double varianceSum = 0;
-	for(auto it : x)
-		varianceSum += (it - average)*(it - average);
-	*/
 	std::cout << "Variance: " << variance << std::endl;
 }
 
@@ -403,8 +392,6 @@ void subband(std::vector<double>& x, int level)
 std::vector<double> getLine(const std::vector<double>& image, size_t width, size_t index)
 {
 	std::vector<double> line;
-	/*for(size_t i = 0; i < width; ++i)
-		line.push_back(image[index * width + i]);*/
 	line.insert(line.begin(), image.begin() + index * width, image.begin() + (index + 1) * width /*- 1*/);
 	return line;
 }
@@ -436,7 +423,7 @@ void analyse2D_97(vector<double>& image, size_t width, size_t height)
 	for(size_t i = 0; i < height; i++)
 	{
 		std::vector<double> line = getLine(image, width, i);
-		analyse_97_lifting(line);
+		analyse_97(line);
 		setLine(image, line, width, i);
 	}
 
@@ -444,7 +431,7 @@ void analyse2D_97(vector<double>& image, size_t width, size_t height)
 	for(size_t i = 0; i < width; i++)
 	{
 		std::vector<double> colonne = getColonne(image, width, height, i);
-		analyse_97_lifting(colonne);
+		analyse_97(colonne);
 		setColonne(image, colonne, width, height, i);
 	}
 }
@@ -454,14 +441,14 @@ void synthese2D_97(vector<double>& image, size_t width, size_t height)
 	for(size_t i = 0; i < width; i++)
 	{
 		std::vector<double> colonne = getColonne(image, width, height, i);
-		synthese_97_lifting(colonne);
+		synthese_97(colonne);
 		setColonne(image, colonne, width, height, i);
 	}
 
 	for(size_t i = 0; i < height; i++)
 	{
 		std::vector<double> line = getLine(image, width, i);
-		synthese_97_lifting(line);
+		synthese_97(line);
 		setLine(image, line, width, i);
 	}
 }
@@ -518,15 +505,13 @@ void iamr2D_97(vector<double>& image, size_t width, size_t height, int level)
 	}
 }
 
+/* TD 5 */
 vector<double> subPicture(const vector<double>& image, size_t width, size_t subWidth, size_t subHeight, size_t indexWidth, size_t indexHeight)
 {
-	//std::cout << "size: " << image.size() << " -- width: " << width << " -- subWidth: " << subWidth << " -- subHeight: " << subHeight << " -- indexWidth: " << indexWidth << " -- indexHeight: " << indexHeight << std::endl;
 	vector<double> subImage;
 	for(size_t i = indexHeight; i < (indexHeight + subHeight); ++i)
 		for(size_t j = indexWidth; j < (indexWidth + subWidth); ++j)
 			subImage.push_back(image[i * width + j]);
-
-	//std::cout << "subImage.size(): " << subImage.size() << std::endl;
 
 	return subImage;
 }
@@ -574,8 +559,7 @@ void debitBand(const std::vector<double>& variances, float debit, int level, siz
 	double product = 1;
 	for(size_t i = 0; i < variances.size(); ++i)
 	{
-		//product *= pow(variances[i],((imgSize / pow(2,level+1)) / imgSize));
-		product *= pow(variances[i],double(1 / pow(2,level+1)));
+		product *= pow(variances[i],double(1 / pow(4,level))); // Fix pow(2,level + 1)) != pow(4,level)) :p
 		std::cout << "pow : " << pow(variances[i],double(1 / pow(2,level+1))) << std::endl;
 		std::cout << "Nj/N ["<< i << "] : " << pow(2,level+1) << std::endl;
 		std::cout << "variance ["<< i << "] : " << variances[i] << std::endl;
@@ -591,7 +575,6 @@ void debitBand(const std::vector<double>& variances, float debit, int level, siz
 	{
     	double dpb = debit + 0.5 * log2(variance /  product);
 		std::cout << "Debit per band : " << dpb << std::endl;
-		std::cout << "Level : " << level << std::endl;
 	}
 }
 
@@ -637,6 +620,7 @@ void image_processing()
 	vector<double> variances = subband2D(image, dim, dim, 3);
 
 	/* DEBIT */
+	std::cout << "" << std::endl;
 	debitBand(variances, 1, 3, image.size());
 
 	iamr2D_97(image, dim, dim, 3);
