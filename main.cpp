@@ -569,13 +569,29 @@ vector<double> subband2D(const vector<double>& image, size_t width, size_t heigh
 	return variances;
 }
 
-void debitBand(const std::vector<double>& variances, float debit, int level)
+void debitBand(const std::vector<double>& variances, float debit, int level, size_t imgSize)
 {
-	double product = 0;
+	double product = 1;
 	for(size_t i = 0; i < variances.size(); ++i)
 	{
-		/*int index = (i == 0)? 0 : i - 1;
-		int*/ 
+		//product *= pow(variances[i],((imgSize / pow(2,level+1)) / imgSize));
+		product *= pow(variances[i],double(1 / pow(2,level+1)));
+		std::cout << "pow : " << pow(variances[i],double(1 / pow(2,level+1))) << std::endl;
+		std::cout << "Nj/N ["<< i << "] : " << pow(2,level+1) << std::endl;
+		std::cout << "variance ["<< i << "] : " << variances[i] << std::endl;
+		std::cout << "product ["<< i << "] : " << product << std::endl;
+		
+		if((i > 0) && ((i % 3) == 0))
+		{
+			level -= 1;
+		}
+	}
+	std::cout << "Prod: " << product << std::endl;
+	for(auto variance : variances)
+	{
+    	double dpb = debit + 0.5 * log2(variance /  product);
+		std::cout << "Debit per band : " << dpb << std::endl;
+		std::cout << "Level : " << level << std::endl;
 	}
 }
 
@@ -621,7 +637,7 @@ void image_processing()
 	vector<double> variances = subband2D(image, dim, dim, 3);
 
 	/* DEBIT */
-
+	debitBand(variances, 1, 3, image.size());
 
 	iamr2D_97(image, dim, dim, 3);
 	for(size_t i = 0; i < dim*dim ; ++i)
