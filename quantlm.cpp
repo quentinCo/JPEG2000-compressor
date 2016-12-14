@@ -8,6 +8,7 @@ void quantlm(double* x,int n,int nq) {
   // q is the centroid
   // qi a i that x[i] is associated to qi
   // qn is the number of x associated to qi
+
   double* q=(double *)calloc(nq,sizeof(double));
   int* qi=(int *)calloc(n,sizeof(int));
   int* qn=(int *)calloc(nq,sizeof(int));

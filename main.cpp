@@ -7,6 +7,7 @@
 #include <cstring>
 
 #include "./functions.c"
+#include "./quantlm.cpp"
 
 using namespace std;
 
@@ -298,7 +299,12 @@ double error(const vector<double>& x , const vector<double>& y)
 		error += (x[i] - y[i]) * (x[i] - y[i]); 
 	}
 
-	return error;
+	return error / p;
+}
+
+double psnr(const vector<double>& x , const vector<double>& y)
+{
+	return (10 * log10(65025 / error(x,y))); // 65 025 = 255^2 
 }
 
 /* TP 3 */
@@ -506,7 +512,7 @@ void iamr2D_97(vector<double>& image, size_t width, size_t height, int level)
 }
 
 /* TD 4 */
-vector<double> subPicture(const vector<double>& image, size_t width, size_t subWidth, size_t subHeight, size_t indexWidth, size_t indexHeight)
+vector<double> getSubPicture(const vector<double>& image, size_t width, size_t subWidth, size_t subHeight, size_t indexWidth, size_t indexHeight)
 {
 	vector<double> subImage;
 	for(size_t i = indexHeight; i < (indexHeight + subHeight); ++i)
@@ -514,6 +520,13 @@ vector<double> subPicture(const vector<double>& image, size_t width, size_t subW
 			subImage.push_back(image[i * width + j]);
 
 	return subImage;
+}
+
+void setSubPicture(vector<double>& image, vector<double>& subPicture, size_t width, size_t subWidth, size_t subHeight, size_t indexWidth, size_t indexHeight)
+{
+	for(size_t i = 0; i < subHeight; ++i)
+		for(size_t j = 0; j < subWidth; ++j)
+			image[(indexHeight + i) * width + (indexWidth + j)] = subPicture[i * subWidth + j];
 }
 
 vector<double> subband2D(const vector<double>& image, size_t width, size_t height, int level)
@@ -524,21 +537,21 @@ vector<double> subband2D(const vector<double>& image, size_t width, size_t heigh
 		size_t halfWidth = width / 2;
 		size_t halfHeight = height / 2;
 
-		vector<double> imageA = subPicture(image, width, halfWidth, halfHeight, 0, 0);
+		vector<double> imageA = getSubPicture(image, width, halfWidth, halfHeight, 0, 0);
 		variances = subband2D(imageA, halfWidth, halfHeight, level-1);
 
 		std::cout << "\nLevel: " << level << std::endl;
-		vector<double> imageDH = subPicture(image, width, halfWidth, halfHeight, 0, halfHeight);
+		vector<double> imageDH = getSubPicture(image, width, halfWidth, halfHeight, 0, halfHeight);
 		std::cout << "\tImage DH: " << std::endl;
 		coutValues(imageDH);
 		variances.push_back(computeVariance(imageDH));
 
-		vector<double> imageDV = subPicture(image, width, halfWidth, halfHeight, halfWidth, 0);
+		vector<double> imageDV = getSubPicture(image, width, halfWidth, halfHeight, halfWidth, 0);
 		std::cout << "\tImage DV: " << std::endl;
 		coutValues(imageDV);
 		variances.push_back(computeVariance(imageDV));
 
-		vector<double> imageDD = subPicture(image, width, halfWidth, halfHeight, halfWidth, halfHeight);
+		vector<double> imageDD = getSubPicture(image, width, halfWidth, halfHeight, halfWidth, halfHeight);
 		std::cout << "\tImage DD: " << std::endl;
 		coutValues(imageDD);
 		variances.push_back(computeVariance(imageDD));
@@ -582,6 +595,39 @@ vector<double> debitBand(const std::vector<double>& variances, float debit, int 
 }
 
 /* TD 5 */
+void quantifier(vector<double>& image, const vector<double>& debits, size_t width, size_t height, int level)
+{
+	std::vector<double> variances;
+	if(level > 0)
+	{
+		int indexDebit = 3 * (level - 1);
+
+		size_t halfWidth = width / 2;
+		size_t halfHeight = height / 2;
+
+		vector<double> imageA = getSubPicture(image, width, halfWidth, halfHeight, 0, 0);
+		quantifier(imageA, debits, halfWidth, halfHeight, level-1);
+		setSubPicture(image, imageA, width, halfWidth, halfHeight, 0, 0);		
+
+		vector<double> imageDH = getSubPicture(image, width, halfWidth, halfHeight, 0, halfHeight); //TODO : DV
+		quantlm(imageDH.data(), imageDH.size(), ceil(pow(2,debits[indexDebit + 1])));
+		setSubPicture(image, imageDH, width, halfWidth, halfHeight, 0, halfHeight);	
+
+
+		vector<double> imageDV = getSubPicture(image, width, halfWidth, halfHeight, halfWidth, 0);
+		quantlm(imageDV.data(), imageDV.size(), ceil(pow(2,debits[indexDebit + 2])));
+		setSubPicture(image, imageDV, width, halfWidth, halfHeight, halfWidth, 0);	
+
+		vector<double> imageDD = getSubPicture(image, width, halfWidth, halfHeight, halfWidth, halfHeight);
+		quantlm(imageDD.data(), imageDD.size(), ceil(pow(2,debits[indexDebit + 3])));
+		setSubPicture(image, imageDD, width, halfWidth, halfHeight, halfWidth, halfHeight);
+	}
+	else
+	{
+		quantlm(image.data(), image.size(), ceil(pow(2,debits[0])));
+	}
+}
+
 
 void image_processing()
 {
@@ -628,12 +674,23 @@ void image_processing()
 	std::cout << "" << std::endl;
 	vector<double> debitsPerBand = debitBand(variances, 1, 3, image.size());
 
+	std::cout << "Quantification" << std::endl;
+	quantifier(image, debitsPerBand, dim, dim, 3);
+
+	for(size_t i = 0; i < dim*dim ; ++i)
+		data[i] = image[i];
+
+	exitPath = "./amr2D_97_quantification_lena.bmp";
+	ecrit_bmp256(exitPath.c_str(), dim, dim, data);
+
 	iamr2D_97(image, dim, dim, 3);
 	for(size_t i = 0; i < dim*dim ; ++i)
 		data[i] = image[i];
 
 	exitPath = "./iamr2D_97_lena.bmp";
 	ecrit_bmp256(exitPath.c_str(), dim, dim, data);	
+
+	std::cout << "PSNR: " << psnr(imageOriginal, image) << std::endl;
 }
 
 /* Main */
