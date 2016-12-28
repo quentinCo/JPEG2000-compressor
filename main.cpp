@@ -573,7 +573,7 @@ vector<double> debitBand(const std::vector<double>& variances, float debit, int 
 	double product = 1;
 	for(size_t i = 0; i < variances.size(); ++i)
 	{
-		product *= pow(variances[i],double(1 / pow(4,level))); // Fix pow(2,level + 1)) != pow(4,level)) :p
+		product *= pow(variances[i],double(1 / pow(4,level)));
 		std::cout << "pow : " << pow(variances[i],double(1 / pow(2,level+1))) << std::endl;
 		std::cout << "Nj/N ["<< i << "] : " << pow(2,level+1) << std::endl;
 		std::cout << "variance ["<< i << "] : " << variances[i] << std::endl;
@@ -693,148 +693,79 @@ void image_processing()
 	std::cout << "PSNR: " << psnr(imageOriginal, image) << std::endl;
 }
 
+void executeCompression(const string& methodName, const string& signalName, vector<double>& signal, void (*analyse)(vector<double>&), void (*synthese)(vector<double>&))
+{
+	string fileName = "";
+	/* Analyse */
+	vector<double> processedSignal = signal;
+	cout <<"\tAnalyse de " << methodName << endl;
+	analyse(processedSignal);
+	fileName = "./ouput_data/" + signalName +"_analyse_" + methodName + ".txt";
+	save_signal(processedSignal, fileName.c_str());
+
+	/* Reconstitution */
+	cout <<"\tReconstitution de " << methodName << endl;
+	synthese(processedSignal);
+	fileName = "./ouput_data/" + signalName +"_synthese_" + methodName + ".txt";
+	save_signal(processedSignal, fileName.c_str());
+
+	cout << "\t\tReconstitution Error : " << error(processedSignal, signal) <<endl;
+}
+
+void testFiltringProcess(vector<double>& signal, const string& signalName)
+{
+	/* Haar */
+	executeCompression("haar", signalName, signal, &analyse_haar, &synthese_haar);
+
+	/* biorthogonaux 9/7 */
+	executeCompression("biorthogonaux_9_7", signalName, signal, &analyse_97, &synthese_97);
+
+	/* Lifting de biorthogonaux 9/7 */
+	if(signalName != "ramp")
+		executeCompression("biorthogonaux_9_7", signalName, signal, &analyse_97_lifting, &synthese_97_lifting);
+}
+
+
 /* Main */
 int main (int argc, char* argv[])
 {
 /* Rampe */
-	cout << "Rampe" << std::endl;
-	vector<double> rampeOriginal;
+	cout << "Rampe Signal" << std::endl;
+	vector<double> rampe;
 	for(int i = 0; i < 255; i++)
-		rampeOriginal.push_back(i);
-	save_signal(rampeOriginal,"rampe.txt");
+		rampe.push_back(i);
+	save_signal(rampe,"rampe.txt");
 
-	/* Haar */
-		/* Analyse de Haar */
-	vector<double> rampe = rampeOriginal;
-	cout <<"\n Analyse de Haar" << endl;
-	analyse_haar(rampe);
-	save_signal(rampe,"./ouput_data/rampe_analyse_haar.txt");
-
-		/* Reconstitution de Haar */
-	cout <<"\n Reconstitution de Haar" << endl;
-	synthese_haar(rampe);
-	save_signal(rampe,"./ouput_data/rampe_synthese_haar.txt");
-	/*
-		Reconstitution parfaite.
-	*/
-
-	/* biorthogonaux 9/7 */
-	rampe = rampeOriginal;
-		/* Analyse biorthogonaux 9/7 */
-	cout <<"\n Analyse de biorthogonaux 9/7" << endl;
-	analyse_97(rampe);
-	save_signal(rampe,"./ouput_data/rampe_analyse_97.txt");
-
-		/* Reconstition biorthogonaux 9/7 */
-	cout <<"\n Synthese de biorthogonaux 9/7" << endl;
-	synthese_97(rampe);
-	save_signal(rampe,"./ouput_data/rampe_synthese_97.txt");
-	/*
-		Reconstitution proche du signal. Différence sur les dernières valeurs. 
-		Les valeurs reconstituées sont différentes des valeurs d'origines, probablement dû 
-		à une approximation utilisée dans les valeurs des filtres passe bas et passe haut.
-	*/
+	testFiltringProcess(rampe, "rampe");
 
 /* Leleccum */
 	cout << "Leleccum" << std::endl;
-	vector<double> leleccumOriginal;
-	read_signal(leleccumOriginal, 4096, "./leleccum.txt");
+	vector<double> leleccum;
+	read_signal(leleccum, 4096, "./leleccum.txt");
 
-	vector<double> leleccum = leleccumOriginal;
-
-	/* Haar */
-		/* Analyse de Haar */
-	cout <<"\n Analyse de Haar" << endl;
-	analyse_haar(leleccum);
-	save_signal(leleccum,"./ouput_data/leleccum_analyse_haar.txt");
-
-		/* Reconstitution de Haar */
-	cout <<"\n Reconstitution de Haar" << endl;
-	synthese_haar(leleccum);
-	save_signal(leleccum,"./ouput_data/leleccum_synthese_haar.txt");
-	cout << "Error: " << error(leleccum, leleccumOriginal) <<endl;
-
-	/* biorthogonaux 9/7 */
-	leleccum = leleccumOriginal;
-		/* Analyse biorthogonaux 9/7 */
-	cout <<"\n Analyse de biorthogonaux 9/7" << endl;
-	analyse_97(leleccum);
-	save_signal(leleccum,"./ouput_data/leleccum_analyse_97.txt");
-
-		/* Reconstition biorthogonaux 9/7 */
-	cout <<"\n Synthese de biorthogonaux 9/7" << endl;
-	synthese_97(leleccum);
-	save_signal(leleccum,"./ouput_data/leleccum_synthese_97.txt");
-	cout << "Error: " << error(leleccum, leleccumOriginal) <<endl;
-
-	/* Leleccum */
-	leleccum = leleccumOriginal;
-
-	cout <<"\n Lifting de biorthogonaux 9/7" << endl;
-	analyse_97_lifting(leleccum);
-	save_signal(leleccum,"./ouput_data/leleccum_analyse_97_lifting.txt");
-
-	synthese_97_lifting(leleccum);
-	save_signal(leleccum,"./ouput_data/leleccum_synthese_97_lifting.txt");
-	cout << "Error: " << error(leleccum, leleccumOriginal) <<endl;
+	testFiltringProcess(leleccum, "leleccum");
 
 /* Test */
-	cout << "Test" << std::endl;
-	vector<double> testOriginal;
-	read_signal(testOriginal, 512, "./test.txt");
+	cout << "Signal Test" << std::endl;
+	vector<double> test;
+	read_signal(test, 512, "./test.txt");
 
-	vector<double> test = testOriginal;
-
-	/* Haar */
-		/* Analyse de Haar */
-	cout <<"\n Analyse de Haar" << endl;
-	analyse_haar(test);
-	save_signal(test,"./ouput_data/test_analyse_haar.txt");
-
-		/* Reconstitution de Haar */
-	cout <<"\n Reconstitution de Haar" << endl;
-	synthese_haar(test);
-	save_signal(test,"./ouput_data/test_synthese_haar.txt");
-	cout << "Error: " << error(test, testOriginal) <<endl;
-
-	/* biorthogonaux 9/7 */
-		/* Analyse biorthogonaux 9/7 */
-	test = testOriginal;
-	cout <<"\n Analyse de biorthogonaux 9/7" << endl;
-	analyse_97(test);
-	save_signal(test,"./ouput_data/test_analyse_97.txt");
-
-		/* Reconstition biorthogonaux 9/7 */
-	cout <<"\n Synthese de biorthogonaux 9/7" << endl;
-	synthese_97(test);
-	save_signal(test,"./ouput_data/test_synthese_97.txt");
-	cout << "Error: " << error(test, testOriginal) <<endl;
-
-	/* Leleccum */
-	test = testOriginal;
-
-	cout <<"\n Lifting de biorthogonaux 9/7" << endl;
-	analyse_97_lifting(test);
-	save_signal(test,"./ouput_data/test_analyse_97_lifting.txt");
-
-	synthese_97_lifting(test);
-	save_signal(test,"./ouput_data/test_synthese_97_lifting.txt");
-	cout << "Error: " << error(test, testOriginal) <<endl;
+	testFiltringProcess(test, "signal_test_file");
 
 
 /* AMR */
-	test = testOriginal;
-	int level = 2;//log2(test.size());
+	vector<double> processedSignal = test;
+	int level = 2;	//log2(test.size());
 
 	cout <<"\n AMR synthese de lifting 9/7" << endl;
-	amr(test, level);
-	save_signal(test,"./ouput_data/test_amr_lifting.txt");
+	amr(processedSignal, level);
+	save_signal(processedSignal,"./ouput_data/test_amr_lifting.txt");
 
-	subband(test, level);
+	subband(processedSignal, level);
 
-	iamr(test, level);
-	save_signal(test,"./ouput_data/test_iamr_lifting.txt");
-	cout << "Error: " << error(test, testOriginal) <<endl;
+	iamr(processedSignal, level);
+	save_signal(processedSignal,"./ouput_data/test_iamr_lifting.txt");
+	cout << "Error: " << error(processedSignal, test) <<endl;
 
 
 /* 2D */
