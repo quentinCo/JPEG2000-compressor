@@ -11,14 +11,6 @@
 
 using namespace std;
 
-
-void print_signal(const vector<double>& x)
-{
-	for (size_t i=0;i<x.size();i++)
-		cout << "x[" << i << "]= " << x[i] << endl;
-	cout << endl;
-}
-
 void save_signal(const vector<double>& x, const string& filename) {
 	FILE *fp=fopen(filename.c_str(),"wt");
 	for (size_t i=0;i<x.size();i++) {
@@ -295,9 +287,7 @@ double error(const vector<double>& x , const vector<double>& y)
 
 	double error = 0;
 	for(size_t i = 0; i < p; ++i)
-	{
 		error += (x[i] - y[i]) * (x[i] - y[i]); 
-	}
 
 	return error / p;
 }
@@ -366,30 +356,35 @@ double computeVariance(const std::vector<double> x)
 
 void coutValues(const std::vector<double>& x)
 {
-	std::cout << "Size: " << x.size() << std::endl;
-	std::cout << "Min: " << *std::min_element(x.begin(), x.end()) << std::endl;
-	std::cout << "Max: " << *std::max_element(x.begin(), x.end()) << std::endl;
+	std::cout << "\tSize: " << x.size() << std::endl;
+	std::cout << "\tMin: " << *std::min_element(x.begin(), x.end()) << std::endl;
+	std::cout << "\tMax: " << *std::max_element(x.begin(), x.end()) << std::endl;
 	double average = computeAverage(x);
-	std::cout << "Average: " << average << std::endl;
+	std::cout << "\tAverage: " << average << std::endl;
 	double variance = computeVariance(x);
-	std::cout << "Variance: " << variance << std::endl;
+	std::cout << "\tVariance: " << variance << std::endl;
 }
 
-void subband(std::vector<double>& x, int level)
+void subband(std::vector<double>& x, int level, int currentLevel = 0)
 {
-	if(level > 0)
+	if(currentLevel < level)
 	{
-		vector<double> xa;
-		xa.insert(xa.begin(), x.begin(), x.begin() + (0.5 * x.size()));  
+		currentLevel ++;
+  
+		std::cout << "Signal at level : " << currentLevel << " / " << level << std::endl;
 		vector<double> xd;
 		xd.insert(xd.begin(), x.begin() + (0.5 * x.size()), x.end());
-		std::cout << "xd" << std::endl;
+		std::cout << "-Details" << std::endl;
 		coutValues(xd);
-		subband(xa, level-1);
+		
+		vector<double> xa;
+		xa.insert(xa.begin(), x.begin(), x.begin() + (0.5 * x.size()));
+		subband(xa, level, currentLevel);
 	}
 	else
 	{
-		std::cout << "xa" << std::endl;
+		std::cout << "Signal at level : " << currentLevel << " / " << level << std::endl;
+		std::cout << "- Approximations" << std::endl;
 		coutValues(x);
 	}
 }
@@ -425,7 +420,7 @@ void setColonne(std::vector<double>& image, const std::vector<double>& colonne, 
 
 void analyse2D_97(vector<double>& image, size_t width, size_t height)
 {
-	std::cout << "\tLine Processing" << std::endl;
+	//std::cout << "\tLine Processing" << std::endl;
 	for(size_t i = 0; i < height; i++)
 	{
 		std::vector<double> line = getLine(image, width, i);
@@ -433,7 +428,7 @@ void analyse2D_97(vector<double>& image, size_t width, size_t height)
 		setLine(image, line, width, i);
 	}
 
-	std::cout << "\tColonne Processing" << std::endl;
+	//std::cout << "\tColonne Processing" << std::endl;
 	for(size_t i = 0; i < width; i++)
 	{
 		std::vector<double> colonne = getColonne(image, width, height, i);
@@ -529,37 +524,40 @@ void setSubPicture(vector<double>& image, vector<double>& subPicture, size_t wid
 			image[(indexHeight + i) * width + (indexWidth + j)] = subPicture[i * subWidth + j];
 }
 
-vector<double> subband2D(const vector<double>& image, size_t width, size_t height, int level)
+void subVariance(vector<double>& variances, const vector<double>& image, size_t globalWidth, size_t width, size_t height, size_t posX, size_t posY)
+{
+	vector<double> subImage = getSubPicture(image, globalWidth, width, height, posX, posY);
+	coutValues(subImage);
+	variances.push_back(computeVariance(subImage));
+}
+
+vector<double> subband2D(const vector<double>& image, size_t width, size_t height, int level, int currentLevel = 0)
 {
 	std::vector<double> variances;
-	if(level > 0)
+	if(currentLevel < level)
 	{
+		currentLevel ++;
 		size_t halfWidth = width / 2;
 		size_t halfHeight = height / 2;
 
+		std::cout << "Signal at level : " << currentLevel << " / " << level << std::endl;
+		std::cout << "  Image DH: " << std::endl;
+		subVariance(variances, image, width, halfWidth, halfHeight, 0, halfHeight);
+
+		std::cout << "  Image DV: " << std::endl;
+		subVariance(variances, image, width, halfWidth, halfHeight, halfWidth, 0);
+
+		std::cout << "  Image DD: " << std::endl;
+		subVariance(variances, image, width, halfWidth, halfHeight, halfWidth, halfHeight);
+
 		vector<double> imageA = getSubPicture(image, width, halfWidth, halfHeight, 0, 0);
-		variances = subband2D(imageA, halfWidth, halfHeight, level-1);
-
-		std::cout << "\nLevel: " << level << std::endl;
-		vector<double> imageDH = getSubPicture(image, width, halfWidth, halfHeight, 0, halfHeight);
-		std::cout << "\tImage DH: " << std::endl;
-		coutValues(imageDH);
-		variances.push_back(computeVariance(imageDH));
-
-		vector<double> imageDV = getSubPicture(image, width, halfWidth, halfHeight, halfWidth, 0);
-		std::cout << "\tImage DV: " << std::endl;
-		coutValues(imageDV);
-		variances.push_back(computeVariance(imageDV));
-
-		vector<double> imageDD = getSubPicture(image, width, halfWidth, halfHeight, halfWidth, halfHeight);
-		std::cout << "\tImage DD: " << std::endl;
-		coutValues(imageDD);
-		variances.push_back(computeVariance(imageDD));
+		vector<double> variancesA = subband2D(imageA, halfWidth, halfHeight, level, currentLevel);
+		variances.insert(variances.end(), variancesA.begin(), variancesA.end());
 	}
 	else
 	{
-		std::cout << "\nLevel: " << level << std::endl;
-		std::cout << "\tImage A: " << std::endl;
+		std::cout << "Signal at level : " << currentLevel << " / " << level << std::endl;
+		std::cout << "  Image A: " << std::endl;
 		coutValues(image);
 
 		variances.push_back(computeVariance(image));
@@ -567,64 +565,75 @@ vector<double> subband2D(const vector<double>& image, size_t width, size_t heigh
 	return variances;
 }
 
-vector<double> debitBand(const std::vector<double>& variances, float debit, int level, size_t imgSize)
+vector<double> debitBand(const std::vector<double>& variances, float debit, int level, size_t imgSize, int currentLevel = 0)
 {
 	vector<double> debitsPerBands;
 	double product = 1;
+
 	for(size_t i = 0; i < variances.size(); ++i)
-	{
-		product *= pow(variances[i],double(1 / pow(4,level)));
-		std::cout << "pow : " << pow(variances[i],double(1 / pow(2,level+1))) << std::endl;
-		std::cout << "Nj/N ["<< i << "] : " << pow(2,level+1) << std::endl;
-		std::cout << "variance ["<< i << "] : " << variances[i] << std::endl;
-		std::cout << "product ["<< i << "] : " << product << std::endl;
-		
-		if((i > 0) && ((i % 3) == 0))
-		{
-			level -= 1;
-		}
+	{	
+		if((i !=  variances.size() - 1) && ((i % 3) == 0))
+			currentLevel += 1;
+
+		std::cout << "Signal at level : " << currentLevel << " / " << level << std::endl;		
+
+		product *= pow(variances[i],double(1 / pow(4,currentLevel)));
+		std::cout << "\tpow : " << pow(variances[i],double(1 / pow(4,currentLevel))) << std::endl;
+		std::cout << "\tNj/N ["<< i << "] : " << pow(4,currentLevel) << std::endl;
+		std::cout << "\tvariance ["<< i << "] : " << variances[i] << std::endl;
+		std::cout << "\tproduct ["<< i << "] : " << product << std::endl;
+
 	}
 	std::cout << "Prod: " << product << std::endl;
-	for(auto variance : variances)
+	currentLevel = 0;
+	for(size_t i = 0; i < variances.size(); ++i)
 	{
-    	double dpb = debit + 0.5 * log2(variance /  product);
+		if((i !=  variances.size() - 1) && ((i % 3) == 0))
+			currentLevel += 1;
+
+		std::cout << "Signal at level : " << currentLevel << " / " << level << ": ";		
+	
+		if(i ==  variances.size() - 1)
+			std::cout << "- Approximation - ";
+
+    	double dpb = debit + 0.5 * log2(variances[i] /  product);
 		debitsPerBands.push_back(dpb);
-		std::cout << "Debit per band : " << dpb << std::endl;
+		std::cout << "\tDebit per band : " << dpb << std::endl;
 	}
 	return debitsPerBands;
 }
 
 /* TD 5 */
-void quantifier(vector<double>& image, const vector<double>& debits, size_t width, size_t height, int level)
+void quantifier(vector<double>& image, const vector<double>& debits, size_t width, size_t height, int level, int currentLevel = 0)
 {
+
 	std::vector<double> variances;
-	if(level > 0)
+	int indexDebit = 3 * currentLevel;
+	if(currentLevel < level)
 	{
-		int indexDebit = 3 * (level - 1);
-
 		size_t halfWidth = width / 2;
-		size_t halfHeight = height / 2;
-
-		vector<double> imageA = getSubPicture(image, width, halfWidth, halfHeight, 0, 0);
-		quantifier(imageA, debits, halfWidth, halfHeight, level-1);
-		setSubPicture(image, imageA, width, halfWidth, halfHeight, 0, 0);		
+		size_t halfHeight = height / 2;		
 
 		vector<double> imageDH = getSubPicture(image, width, halfWidth, halfHeight, 0, halfHeight); //TODO : DV
-		quantlm(imageDH.data(), imageDH.size(), ceil(pow(2,debits[indexDebit + 1])));
+		quantlm(imageDH.data(), imageDH.size(), ceil(pow(2,debits[indexDebit])));
 		setSubPicture(image, imageDH, width, halfWidth, halfHeight, 0, halfHeight);	
 
 
 		vector<double> imageDV = getSubPicture(image, width, halfWidth, halfHeight, halfWidth, 0);
-		quantlm(imageDV.data(), imageDV.size(), ceil(pow(2,debits[indexDebit + 2])));
+		quantlm(imageDV.data(), imageDV.size(), ceil(pow(2,debits[indexDebit + 1])));
 		setSubPicture(image, imageDV, width, halfWidth, halfHeight, halfWidth, 0);	
 
 		vector<double> imageDD = getSubPicture(image, width, halfWidth, halfHeight, halfWidth, halfHeight);
-		quantlm(imageDD.data(), imageDD.size(), ceil(pow(2,debits[indexDebit + 3])));
+		quantlm(imageDD.data(), imageDD.size(), ceil(pow(2,debits[indexDebit + 2])));
 		setSubPicture(image, imageDD, width, halfWidth, halfHeight, halfWidth, halfHeight);
+
+		vector<double> imageA = getSubPicture(image, width, halfWidth, halfHeight, 0, 0);
+		quantifier(imageA, debits, halfWidth, halfHeight, level, currentLevel + 1);
+		setSubPicture(image, imageA, width, halfWidth, halfHeight, 0, 0);
 	}
 	else
 	{
-		quantlm(image.data(), image.size(), ceil(pow(2,debits[0])));
+		quantlm(image.data(), image.size(), ceil(pow(2,debits[indexDebit])));
 	}
 }
 
@@ -671,7 +680,7 @@ void image_processing()
 	vector<double> variances = subband2D(image, dim, dim, 3);
 
 	/* DEBIT */
-	std::cout << "" << std::endl;
+	std::cout << "\nDebits Band" << std::endl;
 	vector<double> debitsPerBand = debitBand(variances, 1, 3, image.size());
 
 	std::cout << "Quantification" << std::endl;
@@ -693,21 +702,24 @@ void image_processing()
 	std::cout << "PSNR: " << psnr(imageOriginal, image) << std::endl;
 }
 
+/* CLASSIC 1D PROCESSING */
+void filtringExecution(const string& nameStape, const string& exitFileName, vector<double>& signal, void (*process)(vector<double>&))
+{
+	cout <<"\t" << nameStape << endl;
+	process(signal);
+	string fileName = "./ouput_data/" + exitFileName + ".txt";
+	save_signal(signal, fileName.c_str());
+}
+
 void executeCompression(const string& methodName, const string& signalName, vector<double>& signal, void (*analyse)(vector<double>&), void (*synthese)(vector<double>&))
 {
 	string fileName = "";
 	/* Analyse */
 	vector<double> processedSignal = signal;
-	cout <<"\tAnalyse de " << methodName << endl;
-	analyse(processedSignal);
-	fileName = "./ouput_data/" + signalName +"_analyse_" + methodName + ".txt";
-	save_signal(processedSignal, fileName.c_str());
+	filtringExecution(("Analyse de " + methodName), (signalName +"_analyse_" + methodName), processedSignal, analyse);
 
 	/* Reconstitution */
-	cout <<"\tReconstitution de " << methodName << endl;
-	synthese(processedSignal);
-	fileName = "./ouput_data/" + signalName +"_synthese_" + methodName + ".txt";
-	save_signal(processedSignal, fileName.c_str());
+	filtringExecution(("Reconstitution de " + methodName), (signalName +"_synthese_" + methodName), processedSignal, synthese);
 
 	cout << "\t\tReconstitution Error : " << error(processedSignal, signal) <<endl;
 }
@@ -722,7 +734,7 @@ void testFiltringProcess(vector<double>& signal, const string& signalName)
 
 	/* Lifting de biorthogonaux 9/7 */
 	if(signalName != "ramp")
-		executeCompression("biorthogonaux_9_7", signalName, signal, &analyse_97_lifting, &synthese_97_lifting);
+		executeCompression("lifting_biorthogonaux_9_7", signalName, signal, &analyse_97_lifting, &synthese_97_lifting);
 }
 
 
@@ -749,7 +761,6 @@ int main (int argc, char* argv[])
 	cout << "Signal Test" << std::endl;
 	vector<double> test;
 	read_signal(test, 512, "./test.txt");
-
 	testFiltringProcess(test, "signal_test_file");
 
 
@@ -757,7 +768,7 @@ int main (int argc, char* argv[])
 	vector<double> processedSignal = test;
 	int level = 2;	//log2(test.size());
 
-	cout <<"\n AMR synthese de lifting 9/7" << endl;
+	cout <<"\tAMR synthese de lifting 9/7" << endl;
 	amr(processedSignal, level);
 	save_signal(processedSignal,"./ouput_data/test_amr_lifting.txt");
 
