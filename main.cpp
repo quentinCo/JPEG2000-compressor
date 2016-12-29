@@ -41,7 +41,6 @@ void interpolation_2(vector<double>& x)
 		y[2 * i] = x[i];
 		y[2 * i +1] = 0; 
 	}
-
 	x = y;
 }
 
@@ -53,7 +52,6 @@ void decimation_2(vector<double>& x)
 	fill(y.begin(), y.end(), 0);
 	for(int i = 0; i < p / 2; i++)
 		y[i] = x[2 * i];
-	
 	x = y;
 }
 
@@ -80,7 +78,6 @@ void filtre(vector<double>& x, const vector<double>& _h)
 		}
 		y[i] = sum;
 	}
-
 	x = y;
 }
 
@@ -243,7 +240,7 @@ void analyse_97_lifting(vector<double>& x)
 }
 
 
-/* Reconstruction par lifting */
+/* 2 - Reconstruction par lifting */
 void synthese_97_lifting(vector<double>& x)
 {
 	size_t p = x.size();
@@ -298,12 +295,12 @@ double psnr(const vector<double>& x , const vector<double>& y)
 }
 
 /* TP 3 */
-	/* AMR */
+/* 1 - Analyse multirésolutions (AMR)  */
 void amr(std::vector<double>& x, int level)
 {
 	if(level > 0)
 	{
-		analyse_97_lifting(x);
+		analyse_97(x);
 		
 		// Split
 		vector<double> xa;
@@ -333,11 +330,12 @@ void iamr(std::vector<double>& x, int level)
 
 		// Merge
 		xa.insert( xa.end(), xd.begin(), xd.end() );
-		synthese_97_lifting(xa);
+		synthese_97(xa);
 		x = xa;
 	}
 }
 
+/* 2 - Etude des sous-bandes issues de l'AMR */
 double computeAverage(const std::vector<double>& x)
 {
 	double sum = std::accumulate(x.begin(), x.end(), 0);
@@ -389,7 +387,7 @@ void subband(std::vector<double>& x, int level, int currentLevel = 0)
 	}
 }
 
-	/* 2D */
+/* 3 - Décomposition 2D */
 std::vector<double> getLine(const std::vector<double>& image, size_t width, size_t index)
 {
 	std::vector<double> line;
@@ -454,6 +452,8 @@ void synthese2D_97(vector<double>& image, size_t width, size_t height)
 	}
 }
 
+/* TP 4 */
+/* 1 - AMR 2D */
 void amr2D_97(vector<double>& image, size_t width, size_t height, int level)
 {
 	if(level > 0)
@@ -506,7 +506,7 @@ void iamr2D_97(vector<double>& image, size_t width, size_t height, int level)
 	}
 }
 
-/* TD 4 */
+/* 2 - Etude des sous-bandes issues de l'AMR 2D */
 vector<double> getSubPicture(const vector<double>& image, size_t width, size_t subWidth, size_t subHeight, size_t indexWidth, size_t indexHeight)
 {
 	vector<double> subImage;
@@ -565,6 +565,7 @@ vector<double> subband2D(const vector<double>& image, size_t width, size_t heigh
 	return variances;
 }
 
+/* 3 - Allocation de débit par sous-bande */
 vector<double> debitBand(const std::vector<double>& variances, float debit, int level, size_t imgSize, int currentLevel = 0)
 {
 	vector<double> debitsPerBands;
@@ -575,13 +576,13 @@ vector<double> debitBand(const std::vector<double>& variances, float debit, int 
 		if((i !=  variances.size() - 1) && ((i % 3) == 0))
 			currentLevel += 1;
 
-		std::cout << "Signal at level : " << currentLevel << " / " << level << std::endl;		
+		//std::cout << "Signal at level : " << currentLevel << " / " << level << std::endl;		
 
 		product *= pow(variances[i],double(1 / pow(4,currentLevel)));
-		std::cout << "\tpow : " << pow(variances[i],double(1 / pow(4,currentLevel))) << std::endl;
+		/*std::cout << "\tpow : " << pow(variances[i],double(1 / pow(4,currentLevel))) << std::endl;
 		std::cout << "\tNj/N ["<< i << "] : " << pow(4,currentLevel) << std::endl;
 		std::cout << "\tvariance ["<< i << "] : " << variances[i] << std::endl;
-		std::cout << "\tproduct ["<< i << "] : " << product << std::endl;
+		std::cout << "\tproduct ["<< i << "] : " << product << std::endl;*/
 
 	}
 	std::cout << "Prod: " << product << std::endl;
@@ -637,7 +638,7 @@ void quantifier(vector<double>& image, const vector<double>& debits, size_t widt
 	}
 }
 
-
+/* MAIN */
 void image_processing()
 {
 	string filePath = "./lena.bmp";
@@ -655,7 +656,7 @@ void image_processing()
 	for(size_t i = 0; i < dim*dim ; ++i)
 		data[i] = image[i];
 
-	string exitPath = "./analyse_lifting_lena.bmp";
+	string exitPath = "./analyse_lena.bmp";
 	ecrit_bmp256(exitPath.c_str(), dim, dim, data);
 
 	synthese2D_97(image, dim, dim);
@@ -663,7 +664,7 @@ void image_processing()
 	for(size_t i = 0; i < dim*dim ; ++i)
 		data[i] = image[i];
 
-	exitPath = "./synthese_lifting_lena.bmp";
+	exitPath = "./synthese_lena.bmp";
 	ecrit_bmp256(exitPath.c_str(), dim, dim, data);	
 
 
@@ -770,12 +771,12 @@ int main (int argc, char* argv[])
 
 	cout <<"\tAMR synthese de lifting 9/7" << endl;
 	amr(processedSignal, level);
-	save_signal(processedSignal,"./ouput_data/test_amr_lifting.txt");
+	save_signal(processedSignal,"./ouput_data/test_amr.txt");
 
 	subband(processedSignal, level);
 
 	iamr(processedSignal, level);
-	save_signal(processedSignal,"./ouput_data/test_iamr_lifting.txt");
+	save_signal(processedSignal,"./ouput_data/test_iamr.txt");
 	cout << "Error: " << error(processedSignal, test) <<endl;
 
 
