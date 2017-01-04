@@ -638,11 +638,12 @@ void quantifier(vector<double>& image, const vector<double>& debits, size_t widt
 	}
 }
 
-/* MAIN */
+/* 2D PROCESSING */
 void image_processing()
 {
 	string filePath = "./lena.bmp";
 	uint32_t dim = 512;
+	int level = 3;
 
 	vector<double> imageOriginal;
 
@@ -670,7 +671,7 @@ void image_processing()
 
 	/* AMR */
 	image = imageOriginal;
-	amr2D_97(image, dim, dim, 3);
+	amr2D_97(image, dim, dim, level);
 	for(size_t i = 0; i < dim*dim ; ++i)
 		data[i] = image[i];
 
@@ -678,14 +679,15 @@ void image_processing()
 	ecrit_bmp256(exitPath.c_str(), dim, dim, data);
 
 	std::cout << "Subband 2D" << std::endl;
-	vector<double> variances = subband2D(image, dim, dim, 3);
+	vector<double> variances = subband2D(image, dim, dim, level);
 
 	/* DEBIT */
 	std::cout << "\nDebits Band" << std::endl;
-	vector<double> debitsPerBand = debitBand(variances, 1, 3, image.size());
+	int debit = 1;
+	vector<double> debitsPerBand = debitBand(variances, debit, level, image.size());
 
 	std::cout << "Quantification" << std::endl;
-	quantifier(image, debitsPerBand, dim, dim, 3);
+	quantifier(image, debitsPerBand, dim, dim, level);
 
 	for(size_t i = 0; i < dim*dim ; ++i)
 		data[i] = image[i];
@@ -693,7 +695,7 @@ void image_processing()
 	exitPath = "./amr2D_97_quantification_lena.bmp";
 	ecrit_bmp256(exitPath.c_str(), dim, dim, data);
 
-	iamr2D_97(image, dim, dim, 3);
+	iamr2D_97(image, dim, dim, level);
 	for(size_t i = 0; i < dim*dim ; ++i)
 		data[i] = image[i];
 
