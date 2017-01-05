@@ -784,12 +784,13 @@ int main (int argc, char* argv[])
 
 
 /* AMR */
+	int levelMax = log2(test.size());
 	// level 2
 	amr1DSignalProcess(test, 2, test);
 	// level 4
 	amr1DSignalProcess(test, 4, test);
 	// level max9	
-	amr1DSignalProcess(test, 9, test);
+	amr1DSignalProcess(test, levelMax, test);
 
 /* 2D */
 	std::cout << "\nImage Processing" << std::endl;
