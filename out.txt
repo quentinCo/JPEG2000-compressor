@@ -90,6 +90,72 @@ Signal at level : 4 / 4
 	Variance: 25327.1
 Error: 6.05116e-10
 
+	AMR synthese de banc 9/7 -- Level 8
+Signal at level : 1 / 8
+-Details
+	Size: 256
+	Min: -29.3367
+	Max: 29.2553
+	Average: 0.175781
+	Variance: 37.707
+Signal at level : 2 / 8
+-Details
+	Size: 128
+	Min: -43.8928
+	Max: 47.0968
+	Average: 1.08594
+	Variance: 211.266
+Signal at level : 3 / 8
+-Details
+	Size: 64
+	Min: -77.9497
+	Max: 79.0461
+	Average: -5.23438
+	Variance: 796.719
+Signal at level : 4 / 8
+-Details
+	Size: 32
+	Min: -123.623
+	Max: 62.4995
+	Average: -8.8125
+	Variance: 1768.94
+Signal at level : 5 / 8
+-Details
+	Size: 16
+	Min: -186.409
+	Max: 204.106
+	Average: -3
+	Variance: 11317.6
+Signal at level : 6 / 8
+-Details
+	Size: 8
+	Min: -188.528
+	Max: 224.996
+	Average: 5.25
+	Variance: 28215.1
+Signal at level : 7 / 8
+-Details
+	Size: 4
+	Min: -384.619
+	Max: 448.703
+	Average: 91.5
+	Variance: 96900
+Signal at level : 8 / 8
+-Details
+	Size: 2
+	Min: -132.026
+	Max: -96.7136
+	Average: -114
+	Variance: 311
+Signal at level : 8 / 8
+- Approximations
+	Size: 2
+	Min: 1798.72
+	Max: 1799.02
+	Average: 1798.5
+	Variance: 0
+Error: 2.16158e-09
+
 	AMR synthese de banc 9/7 -- Level 9
 Signal at level : 1 / 9
 -Details
@@ -245,3 +311,4 @@ Signal at level : 3 / 3: 	Debit per band : 3.36326
 Signal at level : 3 / 3: - Approximation - 	Debit per band : 6.81015
 Quantification
 PSNR: 35.5506
+

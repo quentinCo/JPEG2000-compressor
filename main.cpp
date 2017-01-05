@@ -789,8 +789,10 @@ int main (int argc, char* argv[])
 	amr1DSignalProcess(test, 2, test);
 	// level 4
 	amr1DSignalProcess(test, 4, test);
-	// level max9	
+	// level max 8	
 	amr1DSignalProcess(test, levelMax, test);
+	// level max+1	
+	amr1DSignalProcess(test, levelMax+1, test);
 
 /* 2D */
 	std::cout << "\nImage Processing" << std::endl;
