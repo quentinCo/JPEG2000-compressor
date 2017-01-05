@@ -300,7 +300,7 @@ void amr(std::vector<double>& x, int level)
 {
 	if(level > 0)
 	{
-		analyse_97(x);
+		analyse_97_lifting(x);
 		
 		// Split
 		vector<double> xa;
@@ -330,7 +330,7 @@ void iamr(std::vector<double>& x, int level)
 
 		// Merge
 		xa.insert( xa.end(), xd.begin(), xd.end() );
-		synthese_97(xa);
+		synthese_97_lifting(xa);
 		x = xa;
 	}
 }
@@ -422,7 +422,7 @@ void analyse2D_97(vector<double>& image, size_t width, size_t height)
 	for(size_t i = 0; i < height; i++)
 	{
 		std::vector<double> line = getLine(image, width, i);
-		analyse_97(line);
+		analyse_97_lifting(line);
 		setLine(image, line, width, i);
 	}
 
@@ -430,7 +430,7 @@ void analyse2D_97(vector<double>& image, size_t width, size_t height)
 	for(size_t i = 0; i < width; i++)
 	{
 		std::vector<double> colonne = getColonne(image, width, height, i);
-		analyse_97(colonne);
+		analyse_97_lifting(colonne);
 		setColonne(image, colonne, width, height, i);
 	}
 }
@@ -440,14 +440,14 @@ void synthese2D_97(vector<double>& image, size_t width, size_t height)
 	for(size_t i = 0; i < width; i++)
 	{
 		std::vector<double> colonne = getColonne(image, width, height, i);
-		synthese_97(colonne);
+		synthese_97_lifting(colonne);
 		setColonne(image, colonne, width, height, i);
 	}
 
 	for(size_t i = 0; i < height; i++)
 	{
 		std::vector<double> line = getLine(image, width, i);
-		synthese_97(line);
+		synthese_97_lifting(line);
 		setLine(image, line, width, i);
 	}
 }
@@ -740,6 +740,22 @@ void testFiltringProcess(vector<double>& signal, const string& signalName)
 		executeCompression("lifting_biorthogonaux_9_7", signalName, signal, &analyse_97_lifting, &synthese_97_lifting);
 }
 
+void amr1DSignalProcess(vector<double> processedSignal, int level, const vector<double>& test)
+{
+	string pathFile = "./ouput_data/test_amr_level" + to_string(level) +".txt";
+
+	cout <<"\tAMR synthese de banc 9/7 -- Level " << level << endl;
+	amr(processedSignal, level);
+	save_signal(processedSignal,pathFile.c_str());
+
+	subband(processedSignal, level);
+
+	pathFile = "./ouput_data/test_iamr_level" + to_string(level) +".txt";
+	iamr(processedSignal, level);
+	save_signal(processedSignal,pathFile.c_str());
+	cout << "Error: " << error(processedSignal, test) <<"\n" <<endl;
+}
+
 
 /* Main */
 int main (int argc, char* argv[])
@@ -768,19 +784,12 @@ int main (int argc, char* argv[])
 
 
 /* AMR */
-	vector<double> processedSignal = test;
-	int level = 2;	//log2(test.size());
-
-	cout <<"\tAMR synthese de lifting 9/7" << endl;
-	amr(processedSignal, level);
-	save_signal(processedSignal,"./ouput_data/test_amr.txt");
-
-	subband(processedSignal, level);
-
-	iamr(processedSignal, level);
-	save_signal(processedSignal,"./ouput_data/test_iamr.txt");
-	cout << "Error: " << error(processedSignal, test) <<endl;
-
+	// level 2
+	amr1DSignalProcess(test, 2, test);
+	// level 4
+	amr1DSignalProcess(test, 4, test);
+	// level max9	
+	amr1DSignalProcess(test, 9, test);
 
 /* 2D */
 	std::cout << "\nImage Processing" << std::endl;
