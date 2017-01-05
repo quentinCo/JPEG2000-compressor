@@ -28,29 +28,141 @@ Signal Test
 	Analyse de lifting_biorthogonaux_9_7
 	Reconstitution de lifting_biorthogonaux_9_7
 		Reconstitution Error : 3.83675e-11
-	AMR synthese de lifting 9/7
+	AMR synthese de banc 9/7 -- Level 2
 Signal at level : 1 / 2
 -Details
 	Size: 256
 	Min: -29.3367
 	Max: 29.2553
-	Average: 0.179688
-	Variance: 37.6836
+	Average: 0.175781
+	Variance: 37.707
 Signal at level : 2 / 2
 -Details
 	Size: 128
 	Min: -43.8928
 	Max: 47.0968
-	Average: 1.10156
-	Variance: 211.156
+	Average: 1.08594
+	Variance: 211.266
 Signal at level : 2 / 2
 - Approximations
 	Size: 128
 	Min: 57.3233
 	Max: 394.733
 	Average: 232.57
-	Variance: 7644.1
-Error: 0.0168801
+	Variance: 7643.55
+Error: 1.52795e-10
+
+	AMR synthese de banc 9/7 -- Level 4
+Signal at level : 1 / 4
+-Details
+	Size: 256
+	Min: -29.3367
+	Max: 29.2553
+	Average: 0.175781
+	Variance: 37.707
+Signal at level : 2 / 4
+-Details
+	Size: 128
+	Min: -43.8928
+	Max: 47.0968
+	Average: 1.08594
+	Variance: 211.266
+Signal at level : 3 / 4
+-Details
+	Size: 64
+	Min: -77.9497
+	Max: 79.0461
+	Average: -5.23438
+	Variance: 796.719
+Signal at level : 4 / 4
+-Details
+	Size: 32
+	Min: -123.623
+	Max: 62.4995
+	Average: -8.8125
+	Variance: 1768.94
+Signal at level : 4 / 4
+- Approximations
+	Size: 32
+	Min: 164.695
+	Max: 745.703
+	Average: 464.031
+	Variance: 25327.1
+Error: 6.05116e-10
+
+	AMR synthese de banc 9/7 -- Level 9
+Signal at level : 1 / 9
+-Details
+	Size: 256
+	Min: -29.3367
+	Max: 29.2553
+	Average: 0.175781
+	Variance: 37.707
+Signal at level : 2 / 9
+-Details
+	Size: 128
+	Min: -43.8928
+	Max: 47.0968
+	Average: 1.08594
+	Variance: 211.266
+Signal at level : 3 / 9
+-Details
+	Size: 64
+	Min: -77.9497
+	Max: 79.0461
+	Average: -5.23438
+	Variance: 796.719
+Signal at level : 4 / 9
+-Details
+	Size: 32
+	Min: -123.623
+	Max: 62.4995
+	Average: -8.8125
+	Variance: 1768.94
+Signal at level : 5 / 9
+-Details
+	Size: 16
+	Min: -186.409
+	Max: 204.106
+	Average: -3
+	Variance: 11317.6
+Signal at level : 6 / 9
+-Details
+	Size: 8
+	Min: -188.528
+	Max: 224.996
+	Average: 5.25
+	Variance: 28215.1
+Signal at level : 7 / 9
+-Details
+	Size: 4
+	Min: -384.619
+	Max: 448.703
+	Average: 91.5
+	Variance: 96900
+Signal at level : 8 / 9
+-Details
+	Size: 2
+	Min: -132.026
+	Max: -96.7136
+	Average: -114
+	Variance: 311
+Signal at level : 9 / 9
+-Details
+	Size: 1
+	Min: 596.678
+	Max: 596.678
+	Average: 596
+	Variance: 0
+Signal at level : 9 / 9
+- Approximations
+	Size: 1
+	Min: 2877.42
+	Max: 2877.42
+	Average: 2877
+	Variance: 0
+Error: 298.596
+
 
 Image Processing
 Subband 2D
@@ -59,77 +171,77 @@ Signal at level : 1 / 3
 	Size: 65536
 	Min: -47.4559
 	Max: 49.0152
-	Average: 0.000289917
-	Variance: 16.9049
+	Average: 0.000411987
+	Variance: 16.9102
   Image DV: 
 	Size: 65536
 	Min: -63.2595
 	Max: 73.8147
-	Average: 0.00108337
-	Variance: 42.6935
+	Average: 0.00114441
+	Variance: 42.7585
   Image DD: 
 	Size: 65536
 	Min: -32.759
 	Max: 27.5843
-	Average: 6.10352e-05
-	Variance: 8.267
+	Average: 4.57764e-05
+	Variance: 8.27417
 Signal at level : 2 / 3
   Image DH: 
 	Size: 16384
 	Min: -140.846
 	Max: 203.914
-	Average: 0.00354004
-	Variance: 172.509
+	Average: 0.00469971
+	Variance: 173.025
   Image DV: 
 	Size: 16384
 	Min: -237.72
 	Max: 300.209
-	Average: -0.00817871
-	Variance: 446.142
+	Average: -0.00805664
+	Variance: 447.089
   Image DD: 
 	Size: 16384
 	Min: -106.537
 	Max: 117.387
-	Average: -0.00128174
-	Variance: 116.04
+	Average: -0.00164795
+	Variance: 116.331
 Signal at level : 3 / 3
   Image DH: 
 	Size: 4096
 	Min: -227.904
 	Max: 261.72
-	Average: 0.177246
-	Variance: 1119.47
+	Average: 0.193115
+	Variance: 1128.85
   Image DV: 
 	Size: 4096
 	Min: -366.186
-	Max: 342.189
-	Average: -0.865479
-	Variance: 3539.02
+	Max: 349.9
+	Average: -0.893311
+	Variance: 3562.95
   Image DD: 
 	Size: 4096
 	Min: -228.599
 	Max: 240.995
-	Average: 0.00756836
-	Variance: 1069.38
+	Average: 0.026123
+	Variance: 1076.6
 Signal at level : 3 / 3
   Image A: 
 	Size: 4096
 	Min: 216.015
 	Max: 1815.23
-	Average: 987.579
-	Variance: 127938
+	Average: 987.577
+	Variance: 128024
 
 Debits Band
-Prod: 40.6051
-Signal at level : 1 / 3: 	Debit per band : 0.367892
-Signal at level : 1 / 3: 	Debit per band : 1.03618
-Signal at level : 1 / 3: 	Debit per band : -0.148113
-Signal at level : 2 / 3: 	Debit per band : 2.04347
-Signal at level : 2 / 3: 	Debit per band : 2.72889
-Signal at level : 2 / 3: 	Debit per band : 1.75744
-Signal at level : 3 / 3: 	Debit per band : 3.39251
-Signal at level : 3 / 3: 	Debit per band : 4.22277
-Signal at level : 3 / 3: 	Debit per band : 3.35948
-Signal at level : 3 / 3: - Approximation - 	Debit per band : 6.81075
+Prod: 40.6661
+Signal at level : 1 / 3: 	Debit per band : 0.367032
+Signal at level : 1 / 3: 	Debit per band : 1.03619
+Signal at level : 1 / 3: 	Debit per band : -0.148571
+Signal at level : 2 / 3: 	Debit per band : 2.04454
+Signal at level : 2 / 3: 	Debit per band : 2.72933
+Signal at level : 2 / 3: 	Debit per band : 1.75817
+Signal at level : 3 / 3: 	Debit per band : 3.39744
+Signal at level : 3 / 3: 	Debit per band : 4.22655
+Signal at level : 3 / 3: 	Debit per band : 3.36326
+Signal at level : 3 / 3: - Approximation - 	Debit per band : 6.81015
 Quantification
-PSNR: 34.9263
+PSNR: 35.5506

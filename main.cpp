@@ -784,7 +784,7 @@ int main (int argc, char* argv[])
 
 
 /* AMR */
-	int levelMax = log2(test.size());
+	int levelMax = log2(test.size()) - 1;
 	// level 2
 	amr1DSignalProcess(test, 2, test);
 	// level 4
