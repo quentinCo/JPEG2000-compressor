@@ -4,6 +4,7 @@
 #include <cmath>
 #include <vector>
 #include <algorithm>
+#include <numeric>
 #include <cstring>
 
 #include "./functions.c"
@@ -39,7 +40,7 @@ void interpolation_2(vector<double>& x)
 	for(int i = 0; i < p / 2; i++)
 	{
 		y[2 * i] = x[i];
-		y[2 * i +1] = 0; 
+		y[2 * i +1] = 0;
 	}
 	x = y;
 }
@@ -131,7 +132,7 @@ void synthese(vector<double>& x, const vector<double>& _g0, const vector<double>
 	for(int i = 0; i <= p/2; i++)
 	{
 		yb[i] = x[i];
- 
+
 		int halfIndex = i + p/2;
 		if(halfIndex < p)
 		{
@@ -140,11 +141,11 @@ void synthese(vector<double>& x, const vector<double>& _g0, const vector<double>
 			yb[halfIndex] = 0;
 		}
 	}
-	
+
 	// Synthese
 	half_synthese(yb, _g0);
 	half_synthese(yh, _g1);
-	
+
 	for(int i = 0; i < p; i++)
 		x[i] = yb[i] + yh[i];
 }
@@ -163,7 +164,7 @@ void analyse_97(vector<double>& x)
 	0.852698679009, 0.377402855613, -0.110624404418, -0.023849465019, 0.037828455507}; // passe bas
 	vector<double> _h1 = {0.064538882629, -0.040689417610, -0.418092273222, 0.788485616406,
 	-0.418092273222, -0.040689417610, 0.064538882629, 0, -0};	// passe haut
-	
+
 	analyse(x, _h0, _h1);
 }
 
@@ -173,12 +174,12 @@ void synthese_97(vector<double>& x)
 	0.418092273222, -0.040689417610, -0.064538882629}; // passe bas
 	vector<double> _g1 = {0, -0, 0.037828455507, 0.023849465019, -0.110624404418, -0.377402855613,
 	0.852698679009, -0.377402855613, -0.110624404418, 0.023849465019, 0.037828455507};	// passe haut
-	
+
 	synthese(x, _g0, _g1);
 }
 
 /* TP2 */
-int mirror_increment(int index, int increment, int size) 
+int mirror_increment(int index, int increment, int size)
 {
 	return ((index + increment) < 0 || (index + increment) >= size) ? (-increment) : increment;
 }
@@ -217,7 +218,7 @@ void analyse_97_lifting(vector<double>& x)
 	// Prediction 2
 	analyse_97_lifting_prediction(x, 0.8829110762);
 
-	// Update 2	
+	// Update 2
 	analyse_97_lifting_update(x, 0.4435068522);
 
 	// Scaling
@@ -228,7 +229,7 @@ void analyse_97_lifting(vector<double>& x)
 		x[i + 1] *= a;
 	}
 
-	// 
+	//
 	vector<double> y(p);
 	size_t halfP = p * 0.5;
 	for(size_t i = 0; i < halfP; ++i)
@@ -284,14 +285,14 @@ double error(const vector<double>& x , const vector<double>& y)
 
 	double error = 0;
 	for(size_t i = 0; i < p; ++i)
-		error += (x[i] - y[i]) * (x[i] - y[i]); 
+		error += (x[i] - y[i]) * (x[i] - y[i]);
 
 	return error / p;
 }
 
 double psnr(const vector<double>& x , const vector<double>& y)
 {
-	return (10 * log10(65025 / error(x,y))); // 65 025 = 255^2 
+	return (10 * log10(65025 / error(x,y))); // 65 025 = 255^2
 }
 
 /* TP 3 */
@@ -301,16 +302,16 @@ void amr(std::vector<double>& x, int level)
 	if(level > 0)
 	{
 		analyse_97_lifting(x);
-		
+
 		// Split
 		vector<double> xa;
-		xa.insert(xa.begin(), x.begin(), x.begin() + (0.5 * x.size()));  
+		xa.insert(xa.begin(), x.begin(), x.begin() + (0.5 * x.size()));
 		vector<double> xd;
 		xd.insert(xd.begin(), x.begin() + (0.5 * x.size()), x.end());
 
 		amr(xa, level-1);
-		
-		// Merge		
+
+		// Merge
 		xa.insert( xa.end(), xd.begin(), xd.end() );
 		x = xa;
 	}
@@ -322,10 +323,10 @@ void iamr(std::vector<double>& x, int level)
 	{
 		// Split
 		vector<double> xa;
-		xa.insert(xa.begin(), x.begin(), x.begin() + (0.5 * x.size()));  
+		xa.insert(xa.begin(), x.begin(), x.begin() + (0.5 * x.size()));
 		vector<double> xd;
 		xd.insert(xd.begin(), x.begin() + (0.5 * x.size()), x.end());
-		
+
 		iamr(xa, level-1);
 
 		// Merge
@@ -368,13 +369,13 @@ void subband(std::vector<double>& x, int level, int currentLevel = 0)
 	if(currentLevel < level)
 	{
 		currentLevel ++;
-  
+
 		std::cout << "Signal at level : " << currentLevel << " / " << level << std::endl;
 		vector<double> xd;
 		xd.insert(xd.begin(), x.begin() + (0.5 * x.size()), x.end());
 		std::cout << "-Details" << std::endl;
 		coutValues(xd);
-		
+
 		vector<double> xa;
 		xa.insert(xa.begin(), x.begin(), x.begin() + (0.5 * x.size()));
 		subband(xa, level, currentLevel);
@@ -459,7 +460,7 @@ void amr2D_97(vector<double>& image, size_t width, size_t height, int level)
 	if(level > 0)
 	{
 		analyse2D_97(image, width, height);
-		
+
 		// Split
 		vector<double> imageA;
 		size_t widthA = 0.5 * width;
@@ -470,8 +471,8 @@ void amr2D_97(vector<double>& image, size_t width, size_t height, int level)
 				imageA.push_back(image[i * width + j]);
 		}
 		amr2D_97(imageA, widthA, heightA, level-1);
-		
-		// Merge		
+
+		// Merge
 		for(size_t i = 0; i < heightA; ++i)
 		{
 			for(size_t j = 0; j < widthA; ++j)
@@ -495,7 +496,7 @@ void iamr2D_97(vector<double>& image, size_t width, size_t height, int level)
 
 		iamr2D_97(imageA, widthA, heightA, level-1);
 
-				// Merge		
+				// Merge
 		for(size_t i = 0; i < heightA; ++i)
 		{
 			for(size_t j = 0; j < widthA; ++j)
@@ -572,11 +573,11 @@ vector<double> debitBand(const std::vector<double>& variances, float debit, int 
 	double product = 1;
 
 	for(size_t i = 0; i < variances.size(); ++i)
-	{	
+	{
 		if((i !=  variances.size() - 1) && ((i % 3) == 0))
 			currentLevel += 1;
 
-		//std::cout << "Signal at level : " << currentLevel << " / " << level << std::endl;		
+		//std::cout << "Signal at level : " << currentLevel << " / " << level << std::endl;
 
 		product *= pow(variances[i],double(1 / pow(4,currentLevel)));
 		/*std::cout << "\tpow : " << pow(variances[i],double(1 / pow(4,currentLevel))) << std::endl;
@@ -592,8 +593,8 @@ vector<double> debitBand(const std::vector<double>& variances, float debit, int 
 		if((i !=  variances.size() - 1) && ((i % 3) == 0))
 			currentLevel += 1;
 
-		std::cout << "Signal at level : " << currentLevel << " / " << level << ": ";		
-	
+		std::cout << "Signal at level : " << currentLevel << " / " << level << ": ";
+
 		if(i ==  variances.size() - 1)
 			std::cout << "- Approximation - ";
 
@@ -613,16 +614,16 @@ void quantifier(vector<double>& image, const vector<double>& debits, size_t widt
 	if(currentLevel < level)
 	{
 		size_t halfWidth = width / 2;
-		size_t halfHeight = height / 2;		
+		size_t halfHeight = height / 2;
 
 		vector<double> imageDH = getSubPicture(image, width, halfWidth, halfHeight, 0, halfHeight); //TODO : DV
 		quantlm(imageDH.data(), imageDH.size(), ceil(pow(2,debits[indexDebit])));
-		setSubPicture(image, imageDH, width, halfWidth, halfHeight, 0, halfHeight);	
+		setSubPicture(image, imageDH, width, halfWidth, halfHeight, 0, halfHeight);
 
 
 		vector<double> imageDV = getSubPicture(image, width, halfWidth, halfHeight, halfWidth, 0);
 		quantlm(imageDV.data(), imageDV.size(), ceil(pow(2,debits[indexDebit + 1])));
-		setSubPicture(image, imageDV, width, halfWidth, halfHeight, halfWidth, 0);	
+		setSubPicture(image, imageDV, width, halfWidth, halfHeight, halfWidth, 0);
 
 		vector<double> imageDD = getSubPicture(image, width, halfWidth, halfHeight, halfWidth, halfHeight);
 		quantlm(imageDD.data(), imageDD.size(), ceil(pow(2,debits[indexDebit + 2])));
@@ -666,7 +667,7 @@ void image_processing()
 		data[i] = image[i];
 
 	exitPath = "./synthese_lena.bmp";
-	ecrit_bmp256(exitPath.c_str(), dim, dim, data);	
+	ecrit_bmp256(exitPath.c_str(), dim, dim, data);
 
 
 	/* AMR */
@@ -682,27 +683,32 @@ void image_processing()
 	vector<double> variances = subband2D(image, dim, dim, level);
 
 	/* DEBIT */
-	std::cout << "\nDebits Band" << std::endl;
-	int debit = 1;
-	vector<double> debitsPerBand = debitBand(variances, debit, level, image.size());
+	for(float debit : std::vector<float> {0.5f, 1, 2})
+	{
+		auto debitImage = image;
+		std::cout << "___________________________________________________" << std::endl;
+		std::cout << "-> Debit : " << debit << std::endl;
+		std::cout << "\nDebits Band" << std::endl;
+		vector<double> debitsPerBand = debitBand(variances, debit, level, debitImage.size());
 
-	std::cout << "Quantification" << std::endl;
-	quantifier(image, debitsPerBand, dim, dim, level);
+		std::cout << "Quantification" << std::endl;
+		quantifier(debitImage, debitsPerBand, dim, dim, level);
 
-	for(size_t i = 0; i < dim*dim ; ++i)
-		data[i] = image[i];
+		for(size_t i = 0; i < dim*dim ; ++i)
+			data[i] = debitImage[i];
 
-	exitPath = "./amr2D_97_quantification_lena.bmp";
-	ecrit_bmp256(exitPath.c_str(), dim, dim, data);
+		exitPath = "./amr2D_97_quantification_lena_" + std::to_string(debit) + ".bmp";
+		ecrit_bmp256(exitPath.c_str(), dim, dim, data);
 
-	iamr2D_97(image, dim, dim, level);
-	for(size_t i = 0; i < dim*dim ; ++i)
-		data[i] = image[i];
+		iamr2D_97(debitImage, dim, dim, level);
+		for(size_t i = 0; i < dim*dim ; ++i)
+			data[i] = debitImage[i];
 
-	exitPath = "./iamr2D_97_lena.bmp";
-	ecrit_bmp256(exitPath.c_str(), dim, dim, data);	
+		exitPath = "./iamr2D_97_lena_" + std::to_string(debit) + ".bmp";
+		ecrit_bmp256(exitPath.c_str(), dim, dim, data);
 
-	std::cout << "PSNR: " << psnr(imageOriginal, image) << std::endl;
+		std::cout << "PSNR: " << psnr(imageOriginal, debitImage) << std::endl;
+	}
 }
 
 /* CLASSIC 1D PROCESSING */
@@ -789,9 +795,9 @@ int main (int argc, char* argv[])
 	amr1DSignalProcess(test, 2, test);
 	// level 4
 	amr1DSignalProcess(test, 4, test);
-	// level max 8	
+	// level max 8
 	amr1DSignalProcess(test, levelMax, test);
-	// level max+1	
+	// level max+1
 	amr1DSignalProcess(test, levelMax+1, test);
 
 /* 2D */

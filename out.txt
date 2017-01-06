@@ -1,3 +1,6 @@
+Last login: Fri Jan  6 17:43:35 on ttys000
+ordinateur-4:JPEG2000-compressor-master gregoire$ g++ -Wall -std=c++11 main.cpp -o main
+ordinateur-4:JPEG2000-compressor-master gregoire$ ./main
 Rampe Signal
 	Analyse de haar
 	Reconstitution de haar
@@ -21,7 +24,7 @@ Leleccum
 Signal Test
 	Analyse de haar
 	Reconstitution de haar
-		Reconstitution Error : 5.47001e-28
+		Reconstitution Error : 6.10603e-28
 	Analyse de biorthogonaux_9_7
 	Reconstitution de biorthogonaux_9_7
 		Reconstitution Error : 0.0112178
@@ -216,18 +219,18 @@ Signal at level : 8 / 9
 Signal at level : 9 / 9
 -Details
 	Size: 1
-	Min: 596.678
-	Max: 596.678
-	Average: 596
+	Min: 613.721
+	Max: 613.721
+	Average: 613
 	Variance: 0
 Signal at level : 9 / 9
 - Approximations
 	Size: 1
-	Min: 2877.42
-	Max: 2877.42
-	Average: 2877
+	Min: 2890.58
+	Max: 2890.58
+	Average: 2890
 	Variance: 0
-Error: 298.596
+Error: 345.39
 
 
 Image Processing
@@ -296,6 +299,25 @@ Signal at level : 3 / 3
 	Max: 1815.23
 	Average: 987.577
 	Variance: 128024
+___________________________________________________
+-> Debit : 0.5
+
+Debits Band
+Prod: 40.6661
+Signal at level : 1 / 3: 	Debit per band : -0.132968
+Signal at level : 1 / 3: 	Debit per band : 0.536191
+Signal at level : 1 / 3: 	Debit per band : -0.648571
+Signal at level : 2 / 3: 	Debit per band : 1.54454
+Signal at level : 2 / 3: 	Debit per band : 2.22933
+Signal at level : 2 / 3: 	Debit per band : 1.25817
+Signal at level : 3 / 3: 	Debit per band : 2.89744
+Signal at level : 3 / 3: 	Debit per band : 3.72655
+Signal at level : 3 / 3: 	Debit per band : 2.86326
+Signal at level : 3 / 3: - Approximation - 	Debit per band : 6.31015
+Quantification
+PSNR: 33.3558
+___________________________________________________
+-> Debit : 1
 
 Debits Band
 Prod: 40.6661
@@ -311,4 +333,21 @@ Signal at level : 3 / 3: 	Debit per band : 3.36326
 Signal at level : 3 / 3: - Approximation - 	Debit per band : 6.81015
 Quantification
 PSNR: 35.5506
+___________________________________________________
+-> Debit : 2
 
+Debits Band
+Prod: 40.6661
+Signal at level : 1 / 3: 	Debit per band : 1.36703
+Signal at level : 1 / 3: 	Debit per band : 2.03619
+Signal at level : 1 / 3: 	Debit per band : 0.851429
+Signal at level : 2 / 3: 	Debit per band : 3.04454
+Signal at level : 2 / 3: 	Debit per band : 3.72933
+Signal at level : 2 / 3: 	Debit per band : 2.75817
+Signal at level : 3 / 3: 	Debit per band : 4.39744
+Signal at level : 3 / 3: 	Debit per band : 5.22655
+Signal at level : 3 / 3: 	Debit per band : 4.36326
+Signal at level : 3 / 3: - Approximation - 	Debit per band : 7.81015
+Quantification
+PSNR: 39.2045
+ordinateur-4:JPEG2000-compressor-master gregoire$ 
